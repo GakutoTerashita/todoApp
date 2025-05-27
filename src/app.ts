@@ -12,7 +12,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
-    res.render('index', { title: 'Home' });
+    res.render('home', { 
+        title: 'Home',
+        body: 'Welcome to My App',
+    });
 });
 
 app.listen(PORT, () => {
