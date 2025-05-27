@@ -5,6 +5,7 @@ class TodoListItem {
     name: string;
     description: string;
     id: string;
+    done: boolean = false;
 
     constructor(name: string, description: string, id: string) {
         this.name = name;
@@ -42,6 +43,12 @@ app.get('/', (req, res) => {
 app.post('/items/delete/:id', (req, res) => {
     const itemId = req.params.id;
     items = items.filter(item => item.id !== itemId);
+    res.redirect('/'); 
+});
+
+app.post('/items/complete/:id', (req, res) => {
+    const itemId = req.params.id;
+    items = items.map(item => item.id === itemId ? { ...item, done: !item.done } : item);
     res.redirect('/'); 
 });
 
