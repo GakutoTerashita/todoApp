@@ -15,10 +15,10 @@
         <% items.forEach(function(item) { %>
             <li>
                 <%= item.name %> - <%= item.description %>
-                <form action="/delete/<%= item.id %>" method="POST" style="display:inline;">
+                <form action="/items/delete/<%= item.id %>" method="POST" style="display:inline;">
                     <button type="submit">削除</button>
                 </form>
-                <form action="/post/<%= item.id %>" method="POST" style="display:inline;">
+                <form action="/items/complete/<%= item.id %>" method="POST" style="display:inline;">
                     <button type="submit">完了</button>
                 </form>
             </li>
