@@ -14,7 +14,7 @@
     <ul>
         <% items.forEach(function(item) { %>
             <li>
-                <%= item.name %> - <%= item.description %> <%= item.done ? '✅' : '' %>
+                <%= item.name %> - <%= item.done ? '✅' : '' %>
                 <form action="/items/delete/<%= item.id %>" method="POST" style="display:inline;">
                     <button type="submit">削除</button>
                 </form>
@@ -24,5 +24,13 @@
             </li>
         <% }); %>
     </ul>
+    <h2>登録</h2>
+    <form action="/items/register" method="POST">
+        <label for="name">名前:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="description">説明:</label>
+        <input type="text" id="description" name="description">
+        <button type="submit">登録</button>
+    </form>
 </body>
 </html>
