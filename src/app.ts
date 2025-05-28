@@ -130,68 +130,69 @@ app.use(flash());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+async function main() {
+    const dbConnection = await connectDb();
+    await createTables(dbConnection);
 
-connectDb().then(createTables).then((dbConnection) => {
-    app.get('/', (req, res) => {
-        fetchTodoItems(dbConnection)
-            .then((items) => {
-                res.render('home', { 
-                    title: 'Home',
-                    items,
-                    success: req.flash('success'),
-                    error: req.flash('error'),
-                });
-            })
-            .catch((error) => {
-                console.error('Error fetching todo items:', error);
-                // req.flash('error', 'Failed to fetch todo items');
-                res.redirect('/error'); // TODO: Create an database fetch error page
+    app.get('/', async (req, res) => {
+        try {
+            const items = await fetchTodoItems(dbConnection)
+            res.render('home', { 
+                title: 'Home',
+                items,
+                success: req.flash('success'),
+                error: req.flash('error'),
             });
+        } catch (error) {
+            console.error('Error fetching todo items:', error);
+            // req.flash('error', 'Failed to fetch todo items');
+            res.redirect('/error'); // TODO: Create an database fetch error page
+        }
     });
 
     app.get('/error', (req, res) => {
         res.send('error'); // TODO: Create an error page
     });
 
-    app.post('/items/delete/:id', (req, res) => {
+    app.post('/items/delete/:id', async (req, res) => {
         const itemId = req.params.id;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
             res.redirect('/');
             return;
         }
-        removeTodoItem(dbConnection, itemId)
-            .then(() => {
-                req.flash('success', 'Removed item successfully');
-                res.redirect('/'); 
-            })
-            .catch((error) => {
-                req.flash('error', 'Failed to remove item');
-                console.error('Error removing item:', error);
-                res.redirect('/');
-            });
+
+        try {
+            await removeTodoItem(dbConnection, itemId)
+            req.flash('success', 'Removed item successfully');
+            res.redirect('/'); 
+        } catch (error) {
+            req.flash('error', 'Failed to remove item');
+            console.error('Error removing item:', error);
+            res.redirect('/');
+        }
     });
 
-    app.post('/items/complete/:id', (req, res) => {
+    app.post('/items/complete/:id', async (req, res) => {
         const itemId = req.params.id;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
             res.redirect('/');
             return;
         }
-        completeTodoItem(dbConnection, itemId)
-            .then(() => {
-                req.flash('success', 'Changed item status successfully');
-                res.redirect('/'); 
-            })
-            .catch((error) => {
-                req.flash('error', 'Failed to change item status');
-                console.error('Error changing item status:', error);
-                res.redirect('/');
-            });
+
+        try {
+            await completeTodoItem(dbConnection, itemId)
+            req.flash('success', 'Changed item status successfully');
+            res.redirect('/'); 
+        } catch (error) {
+            req.flash('error', 'Failed to change item status');
+            console.error('Error changing item status:', error);
+            res.redirect('/');
+        }
     });
 
-    app.post('/items/register', (req, res) => {
+    app.post('/items/register', async (req, res) => {
         const { name } = req.body;
 
         if (!name) {
@@ -201,24 +202,24 @@ connectDb().then(createTables).then((dbConnection) => {
         }
 
         const uuid = v4();
-        registerTodoItem(dbConnection, new TodoListItem(name, uuid, false))
-            .then(() => {
-                req.flash('success', 'Item added successfully');
-                res.redirect('/');
-            })
-            .catch((error) => {
-                req.flash('error', 'Failed to add item');
-                console.error('Error adding item:', error);
-                res.redirect('/');
-            });
+        try {
+            await registerTodoItem(dbConnection, new TodoListItem(name, uuid, false))
+            req.flash('success', 'Item added successfully');
+            res.redirect('/');
+        } catch (error) {
+            req.flash('error', 'Failed to add item');
+            console.error('Error adding item:', error);
+            res.redirect('/');
+        }
     });
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
     });
-}).catch((error) => {
-    console.error('Failed to start the server:', error);
+}
+
+main().catch((error) => {
+    console.error('Error in main function:', error);
     process.exit(1);
 });
-
 export default app;
