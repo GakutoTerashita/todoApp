@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import { v4 as uuidv4, v4 } from 'uuid';
 
 class TodoListItem {
     name: string;
@@ -48,6 +49,14 @@ app.post('/items/complete/:id', (req, res) => {
     const itemId = req.params.id;
     items = items.map(item => item.id === itemId ? { ...item, done: !item.done } : item);
     res.redirect('/'); 
+});
+
+app.post('/items/register', (req, res) => {
+    const { name } = req.body;
+    if (!name) res.redirect('/');
+    const uuid = v4();
+    items.push(new TodoListItem(name, uuid));
+    res.redirect('/');
 });
 
 app.listen(PORT, () => {
