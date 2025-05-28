@@ -38,7 +38,7 @@ const connectDb = async (): Promise<mysql.Connection> => {
     }
 };
 
-const createTables = async (dbConnection: mysql.Connection) => {
+const createTables = async (dbConnection: mysql.Connection): Promise<mysql.Connection> => {
     try {
         await dbConnection.query(`
             CREATE TABLE IF NOT EXISTS users (
