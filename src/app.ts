@@ -13,11 +13,23 @@ if (process.env.NODE_ENV !== 'production') {
 class TodoListItem {
     id: string;
     name: string;
-    done: boolean = false;
+    done: boolean;
 
-    constructor(name: string, id: string) {
+    constructor(name: string, id: string, done: boolean) {
         this.id = id;
         this.name = name;
+        this.done = done;
+    }
+
+    static fromDatabaseRow(row: any): TodoListItem {
+        if (
+            typeof row.id !== 'string' || 
+            typeof row.name !== 'string' ||
+            typeof row.done !== 'boolean'
+        ) {
+            throw new Error('Invalid row format');
+        }
+        return new TodoListItem(row.name, row.id, row.done) as TodoListItem;
     }
 }
 
@@ -67,10 +79,7 @@ const fetchTodoItems = async (dbConnection: mysql.Connection): Promise<TodoListI
             return [];
         }
 
-        return rows.map((row: any) => {
-            const listItem = row as TodoListItem;
-            return listItem;
-        });
+        return rows.map(row => TodoListItem.fromDatabaseRow(row));
     } catch (error) {
         console.error('Failed to fetch todo items:', error);
         throw error;
@@ -100,7 +109,10 @@ const completeTodoItem = async (dbConnection: mysql.Connection, itemId: string):
 
 const registerTodoItem = async (dbConnection: mysql.Connection, item: TodoListItem): Promise<void> => {
     try {
-        await dbConnection.query('INSERT INTO todo_items (id, name, done) VALUES (?, ?, ?)', [item.id, item.name, item.done]);
+        await dbConnection.query(
+            'INSERT INTO todo_items (id, name, done) VALUES (?, ?, ?)',
+            [item.id, item.name, item.done]
+        );
         return;
     }
     catch (error) {
@@ -195,7 +207,7 @@ connectDb().then(createTables).then((dbConnection) => {
         }
 
         const uuid = v4();
-        registerTodoItem(dbConnection, new TodoListItem(name, uuid))
+        registerTodoItem(dbConnection, new TodoListItem(name, uuid, false))
             .then(() => {
                 req.flash('success', 'Item added successfully');
                 res.redirect('/');
