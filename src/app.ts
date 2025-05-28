@@ -20,17 +20,6 @@ class TodoListItem {
         this.name = name;
         this.done = done;
     }
-
-    static fromDatabaseRow(row: any): TodoListItem {
-        if (
-            typeof row.id !== 'string' || 
-            typeof row.name !== 'string' ||
-            typeof row.done !== 'boolean'
-        ) {
-            throw new Error('Invalid row format');
-        }
-        return new TodoListItem(row.name, row.id, row.done) as TodoListItem;
-    }
 }
 
 
@@ -79,7 +68,7 @@ const fetchTodoItems = async (dbConnection: mysql.Connection): Promise<TodoListI
             return [];
         }
 
-        return rows.map(row => TodoListItem.fromDatabaseRow(row));
+        return rows.map((row: any) => new TodoListItem(row.name, row.id, row.done)); // TODO: any
     } catch (error) {
         console.error('Failed to fetch todo items:', error);
         throw error;
@@ -155,9 +144,13 @@ connectDb().then(createTables).then((dbConnection) => {
             })
             .catch((error) => {
                 console.error('Error fetching todo items:', error);
-                req.flash('error', 'Failed to fetch todo items');
-                res.redirect('/');
+                // req.flash('error', 'Failed to fetch todo items');
+                res.redirect('/error'); // TODO: Create an database fetch error page
             });
+    });
+
+    app.get('/error', (req, res) => {
+        res.send('error'); // TODO: Create an error page
     });
 
     app.post('/items/delete/:id', (req, res) => {
