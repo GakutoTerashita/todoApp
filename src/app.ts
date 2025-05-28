@@ -3,6 +3,20 @@ import path from 'path';
 import { v4 } from 'uuid';
 import session from 'express-session';
 import flash from 'connect-flash';
+import mysql from 'mysql2';
+import dotenv from 'dotenv';
+
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+}
+
+const dbConnection = mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'todoApp',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+});
 
 class TodoListItem {
     name: string;
