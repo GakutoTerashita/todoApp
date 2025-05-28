@@ -130,6 +130,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'defaultShouldNotBeUsedInProduction',
     saveUninitialized: true,
+    resave: false,
     cookie: {
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24, // 1 day
