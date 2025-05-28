@@ -1,6 +1,8 @@
 import express from 'express';
 import path from 'path';
 import { v4 } from 'uuid';
+import session from 'express-session';
+import flash from 'connect-flash';
 
 class TodoListItem {
     name: string;
@@ -28,6 +30,15 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'defaultShouldNotBeUsedInProduction',
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+    }
+}));
+app.use(flash());
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -36,26 +47,37 @@ app.get('/', (req, res) => {
     res.render('home', { 
         title: 'Home',
         items,
+        success: req.flash('success'),
+        error: req.flash('error'),
     });
 });
 
 app.post('/items/delete/:id', (req, res) => {
     const itemId = req.params.id;
     items = items.filter(item => item.id !== itemId);
+    req.flash('success', 'Removed item successfully');
     res.redirect('/'); 
 });
 
 app.post('/items/complete/:id', (req, res) => {
     const itemId = req.params.id;
     items = items.map(item => item.id === itemId ? { ...item, done: !item.done } : item);
+    req.flash('success', 'Changed item status successfully');
     res.redirect('/'); 
 });
 
 app.post('/items/register', (req, res) => {
     const { name } = req.body;
-    if (!name) res.redirect('/');
+
+    if (!name) {
+        req.flash('error', 'Item name is required');
+        res.redirect('/');
+        return;
+    }
+
     const uuid = v4();
     items.push(new TodoListItem(name, uuid));
+    req.flash('success', 'Item added successfully');
     res.redirect('/');
 });
 
