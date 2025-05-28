@@ -17,15 +17,22 @@ const dbConnection = mysql.createConnection({
     database: process.env.DB_NAME || 'todoApp',
     port: parseInt(process.env.DB_PORT || '3306', 10),
 });
+dbConnection.query(`
+    CREATE TABLE IF NOT EXISTS todo_items (
+        id VARCHAR(36) PRIMARY KEY,
+        name TEXT NOT NULL,
+        done BOOLEAN DEFAULT FALSE
+    );
+`);
 
 class TodoListItem {
-    name: string;
     id: string;
+    name: string;
     done: boolean = false;
 
     constructor(name: string, id: string) {
-        this.name = name;
         this.id = id;
+        this.name = name;
     }
 }
 
