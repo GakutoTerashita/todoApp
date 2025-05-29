@@ -5,6 +5,7 @@ import flash from 'connect-flash';
 import dotenv from 'dotenv';
 import { todoRoutes } from './routes/todoRoutes';
 import { connectDb, createTables } from './db/connection';
+import { DbController } from './db/todoItems';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -17,6 +18,8 @@ async function main() {
     const dbConnection = await connectDb();
 
     await createTables(dbConnection);
+
+    const dbController = new DbController(dbConnection);
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -34,7 +37,7 @@ async function main() {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
 
-    app.use('/', todoRoutes(dbConnection));
+    app.use('/', todoRoutes(dbController));
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);

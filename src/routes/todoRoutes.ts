@@ -1,15 +1,15 @@
 import express from 'express';
-import { removeTodoItem, completeTodoItem, registerTodoItem, TodoListItem, fetchTodoItemById, updateTodoItemNameById, fetchTodoItemsDoneNot, fetchTodoItemsDone } from '../db/todoItems';
+import { DbController, TodoListItem } from '../db/todoItems';
 import { v4 } from 'uuid';
 import mysql from 'mysql2/promise';
 
-export const todoRoutes = (dbConnection: mysql.Connection) => {
+export const todoRoutes = (dbController: DbController ) => {
     const router = express.Router();
 
     router.get('/', async (req, res) => {
         try {
-            const items = await fetchTodoItemsDoneNot(dbConnection)
-            const itemsDone = await fetchTodoItemsDone(dbConnection);
+            const items = await dbController.fetchTodoItemsDoneNot()
+            const itemsDone = await dbController.fetchTodoItemsDone();
             res.render('home', { 
                 items,
                 itemsDone,
@@ -36,7 +36,7 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
                 return;
             }
 
-            await removeTodoItem(dbConnection, itemId)
+            await dbController.removeTodoItem(itemId)
             req.flash('success', 'Removed item successfully');
             res.redirect('/'); 
         } catch (error) {
@@ -55,7 +55,7 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
         }
 
         try {
-            await completeTodoItem(dbConnection, itemId)
+            await dbController.completeTodoItem(itemId)
             req.flash('success', 'Changed item status successfully');
             res.redirect('/'); 
         } catch (error) {
@@ -76,7 +76,7 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
 
             const uuid = v4();
 
-            await registerTodoItem(dbConnection, new TodoListItem(name, uuid, false))
+            await dbController.registerTodoItem(new TodoListItem(name, uuid, false))
             req.flash('success', 'Item added successfully');
             res.redirect('/');
         } catch (error) {
@@ -95,7 +95,7 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
                 return;
             }
 
-            const item = await fetchTodoItemById(dbConnection, itemId);
+            const item = await dbController.fetchTodoItemById(itemId);
             if (!item) {
                 req.flash('error', 'Item not found');
                 res.redirect('/');
@@ -120,14 +120,14 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
                 return;
             }
 
-            const item = await fetchTodoItemById(dbConnection, itemId);
+            const item = await dbController.fetchTodoItemById(itemId);
             if (!item) {
                 req.flash('error', 'Item not found');
                 res.redirect('/');
                 return;
             }
 
-            await updateTodoItemNameById(dbConnection, itemId, name);
+            await dbController.updateTodoItemNameById(itemId, name);
 
             req.flash('success', 'Item modified successfully');
             res.redirect('/');
