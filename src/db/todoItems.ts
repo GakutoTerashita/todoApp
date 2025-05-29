@@ -12,8 +12,18 @@ export class TodoListItem {
     }
 }
 
-export const fetchTodoItems = async (dbConnection: mysql.Connection): Promise<TodoListItem[]> => {
-    const [rows] = await dbConnection.query('SELECT * FROM todo_items');
+export const fetchTodoItemsDoneNot = async (dbConnection: mysql.Connection): Promise<TodoListItem[]> => {
+    const [rows] = await dbConnection.query('SELECT * FROM todo_items WHERE done != true');
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+        return [];
+    }
+
+    return rows.map((row: any) => new TodoListItem(row.name, row.id, row.done)); // TODO: any
+};
+
+export const fetchTodoItemsDone = async (dbConnection: mysql.Connection): Promise<TodoListItem[]> => {
+    const [rows] = await dbConnection.query('SELECT * FROM todo_items WHERE done = true');
 
     if (!Array.isArray(rows) || rows.length === 0) {
         return [];

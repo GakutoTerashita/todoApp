@@ -1,5 +1,5 @@
 import express from 'express';
-import { fetchTodoItems, removeTodoItem, completeTodoItem, registerTodoItem, TodoListItem, fetchTodoItemById, updateTodoItemNameById } from '../db/todoItems';
+import { removeTodoItem, completeTodoItem, registerTodoItem, TodoListItem, fetchTodoItemById, updateTodoItemNameById, fetchTodoItemsDoneNot, fetchTodoItemsDone } from '../db/todoItems';
 import { v4 } from 'uuid';
 import mysql from 'mysql2/promise';
 
@@ -8,9 +8,11 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
 
     router.get('/', async (req, res) => {
         try {
-            const items = await fetchTodoItems(dbConnection)
+            const items = await fetchTodoItemsDoneNot(dbConnection)
+            const itemsDone = await fetchTodoItemsDone(dbConnection);
             res.render('home', { 
                 items,
+                itemsDone,
                 success: req.flash('success'),
                 error: req.flash('error'),
             });
