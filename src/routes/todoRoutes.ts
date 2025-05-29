@@ -1,5 +1,5 @@
 import express from 'express';
-import { fetchTodoItems, removeTodoItem, completeTodoItem, registerTodoItem, TodoListItem } from '../db/todoItems';
+import { fetchTodoItems, removeTodoItem, completeTodoItem, registerTodoItem, TodoListItem, fetchTodoItemById, updateTodoItemNameById } from '../db/todoItems';
 import { v4 } from 'uuid';
 import mysql from 'mysql2/promise';
 
@@ -80,6 +80,58 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
         } catch (error) {
             req.flash('error', 'Failed to add item');
             console.error('Error adding item:', error);
+            res.redirect('/');
+        }
+    });
+
+    router.get('/items/modify/:id', async (req, res) => {
+        const itemId = req.params.id;
+        if (!itemId) {
+            req.flash('error', 'Item ID is required');
+            res.redirect('/');
+            return;
+        }
+
+        try {
+            const item = await fetchTodoItemById(dbConnection, itemId);
+            if (!item) {
+                req.flash('error', 'Item not found');
+                res.redirect('/');
+                return;
+            }
+            res.render('modifyItems', { item });
+        } catch (error) {
+            req.flash('error', 'Failed to fetch item for modification');
+            console.error('Error fetching item for modification:', error);
+            res.redirect('/');
+        }
+    });
+
+    router.post('/items/modify/:id', async (req, res) => {
+        const itemId = req.params.id;
+        const { name } = req.body;
+        
+        if (!itemId || !name) {
+            req.flash('error', 'Item ID and name are required');
+            res.redirect('/');
+            return;
+        }
+
+        try {
+            const item = await fetchTodoItemById(dbConnection, itemId);
+            if (!item) {
+                req.flash('error', 'Item not found');
+                res.redirect('/');
+                return;
+            }
+
+            await updateTodoItemNameById(dbConnection, itemId, name);
+
+            req.flash('success', 'Item modified successfully');
+            res.redirect('/');
+        } catch (error) {
+            req.flash('error', 'Failed to modify item');
+            console.error('Error modifying item:', error);
             res.redirect('/');
         }
     });
