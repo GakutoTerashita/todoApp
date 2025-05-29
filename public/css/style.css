@@ -49,6 +49,7 @@ div.main {
 	padding: 16px;
 	border: 1px solid #ccc;
 	border-radius: 16px;
+	box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
@@ -63,14 +64,36 @@ h2 {
 	margin-bottom: 12px;
 }
 
+li.item {
+	margin: 8px 0;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	background-color: #f9f9f9;
+	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+	display: flex;
+	align-items: center;
+}
+
+div.item-name {
+	display: inline;
+	flex-grow: 1;
+	padding-left: 12px;
+}
+
 button {
 	border: none;
 	border-radius: 8px;
-	padding: 4px 8px;
-	margin: 4px;
+	padding: 8px 16px;
+	margin: 0px 4px;
 	cursor: pointer;
+	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 button.primary {
 	background-color: #71ff55;
+}
+
+button.danger {
+	background-color: #ff5555;
 }

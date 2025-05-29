@@ -8,16 +8,22 @@
 </head>
 <body>
     <div class="main">
-        <h1>ToDo</h1>
         <%- include('./partials/flash') %>
-        <h2>項目</h2>
+        <h1>ToDo</h1>
+        <form action="/items/register" method="POST">
+            <label for="name">名前:</label>
+            <input type="text" id="name" name="name" required>
+            <button type="submit">登録</button>
+        </form>
         <ul>
             <% items.forEach(function(item) { %>
-                <li>
+                <li class="item">
                     <form action="/items/complete/<%= item.id %>" method="POST" style="display:inline;">
                         <button class="primary" type="submit">完了</button>
                     </form>
-                    <%= item.name %><%= item.done ? ' - ✅' : '' %>
+                    <div class="item-name">
+                        <%= item.name %><%= item.done ? ' - ✅' : '' %>
+                    </div>
                     <form action="/items/delete/<%= item.id %>" method="POST" style="display:inline;">
                         <button class="danger" type="submit">削除</button>
                     </form>
@@ -27,12 +33,6 @@
                 </li>
             <% }); %>
         </ul>
-        <h2>登録</h2>
-        <form action="/items/register" method="POST">
-            <label for="name">名前:</label>
-            <input type="text" id="name" name="name" required>
-            <button type="submit">登録</button>
-        </form>
     </div>
 </body>
 </html>
