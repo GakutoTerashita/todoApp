@@ -75,6 +75,12 @@ li.item {
 	align-items: center;
 }
 
+li.cleared-item {
+	opacity: 0.5;
+	background-color: #d6ffd6;
+	border-color: #b2ffb2;
+}
+
 div.flex {
 	display: flex;
 	align-items: center;

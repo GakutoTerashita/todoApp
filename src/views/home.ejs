@@ -8,19 +8,25 @@
 </head>
 <body>
     <div class="main">
-        <%- include('./partials/flash') %>
         <h1>ToDo</h1>
-        <form class="reg-item-name" action="/items/register" method="POST">
-            <label for="name"></label>
-            <input type="text" id="name" name="name" placeholder="ここにやることを入力..." required>
-            <button class="primary" type="submit">登録</button>
-        </form>
+        <div class="flex">
+            <form class="reg-item-name" action="/items/register" method="POST">
+                <label for="name"></label>
+                <input type="text" id="name" name="name" placeholder="ここにやることを入力..." required>
+                <button class="primary" type="submit">登録</button>
+            </form>
+            <%- include('./partials/flash') %>
+        </div>
         <div class="divider"></div>
         <ul>
             <% items.forEach(function(item) { %>
+            <% if (item.done) { %>
+                <li class="item cleared-item">
+            <% } else { %>
                 <li class="item">
+            <% } %>
                     <div class="item-name">
-                        <%= item.name %><%= item.done ? ' - ✅' : '' %>
+                        <%= item.name %>
                     </div>
                     <form action="/items/modify/<%= item.id %>" method="GET" style="display:inline">
                         <button type="submit">編集</button>
@@ -29,7 +35,11 @@
                         <button class="danger" type="submit">削除</button>
                     </form>
                     <form action="/items/complete/<%= item.id %>" method="POST" style="display:inline;">
-                        <button class="primary" type="submit">完了</button>
+                        <% if (item.done) {%>
+                            <button type="submit">戻す</button>
+                        <% } else { %>
+                            <button class="primary" type="submit">完了</button>
+                        <% } %>
                     </form>
                 </li>
             <% }); %>
