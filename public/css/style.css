@@ -70,7 +70,12 @@ li.item {
 	border: 1px solid #ddd;
 	border-radius: 8px;
 	background-color: #f9f9f9;
-	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+	display: flex;
+	align-items: center;
+}
+
+div.flex {
 	display: flex;
 	align-items: center;
 }
@@ -87,7 +92,6 @@ button {
 	padding: 8px 16px;
 	margin: 0px 4px;
 	cursor: pointer;
-	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 button.primary {
@@ -97,4 +101,39 @@ button.primary {
 button.danger {
 	color: white;
 	background-color: #ff5555;
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+	padding: 8px 12px;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	font-size: 16px;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	outline: none;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+	border-color: #71ff55;
+}
+
+form.reg-item-name {
+	display: flex;
+}
+
+form.reg-item-name > input {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+form.reg-item-name > button {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	margin-left: 0;
+	box-shadow: none;
+}
+
+div.divider {
+	height: 1px;
+	background-color: #ddd;
+	margin: 16px 0;
 }

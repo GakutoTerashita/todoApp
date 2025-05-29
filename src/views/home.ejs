@@ -10,11 +10,12 @@
     <div class="main">
         <%- include('./partials/flash') %>
         <h1>ToDo</h1>
-        <form action="/items/register" method="POST">
-            <label for="name">名前:</label>
-            <input type="text" id="name" name="name" required>
-            <button type="submit">登録</button>
+        <form class="reg-item-name" action="/items/register" method="POST">
+            <label for="name"></label>
+            <input type="text" id="name" name="name" placeholder="ここにやることを入力..." required>
+            <button class="primary" type="submit">登録</button>
         </form>
+        <div class="divider"></div>
         <ul>
             <% items.forEach(function(item) { %>
                 <li class="item">
