@@ -28,14 +28,14 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
     });
 
     router.post('/items/delete/:id', async (req, res) => {
-        const itemId = req.params.id;
-        if (!itemId) {
-            req.flash('error', 'Item ID is required');
-            res.redirect('/');
-            return;
-        }
-
         try {
+            const itemId = req.params.id;
+            if (!itemId) {
+                req.flash('error', 'Item ID is required');
+                res.redirect('/');
+                return;
+            }
+
             await removeTodoItem(dbConnection, itemId)
             req.flash('success', 'Removed item successfully');
             res.redirect('/'); 
@@ -66,16 +66,16 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
     });
 
     router.post('/items/register', async (req, res) => {
-        const { name } = req.body;
-        if (!name) {
-            req.flash('error', 'Item name is required');
-            res.redirect('/');
-            return;
-        }
-
-        const uuid = v4();
-
         try {
+            const { name } = req.body;
+            if (!name) {
+                req.flash('error', 'Item name is required');
+                res.redirect('/');
+                return;
+            }
+
+            const uuid = v4();
+
             await registerTodoItem(dbConnection, new TodoListItem(name, uuid, false))
             req.flash('success', 'Item added successfully');
             res.redirect('/');
@@ -87,14 +87,14 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
     });
 
     router.get('/items/modify/:id', async (req, res) => {
-        const itemId = req.params.id;
-        if (!itemId) {
-            req.flash('error', 'Item ID is required');
-            res.redirect('/');
-            return;
-        }
-
         try {
+            const itemId = req.params.id;
+            if (!itemId) {
+                req.flash('error', 'Item ID is required');
+                res.redirect('/');
+                return;
+            }
+
             const item = await fetchTodoItemById(dbConnection, itemId);
             if (!item) {
                 req.flash('error', 'Item not found');
@@ -110,16 +110,16 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
     });
 
     router.post('/items/modify/:id', async (req, res) => {
-        const itemId = req.params.id;
-        const { name } = req.body;
-        
-        if (!itemId || !name) {
-            req.flash('error', 'Item ID and name are required');
-            res.redirect('/');
-            return;
-        }
-
         try {
+            const itemId = req.params.id;
+            const { name } = req.body;
+            
+            if (!itemId || !name) {
+                req.flash('error', 'Item ID and name are required');
+                res.redirect('/');
+                return;
+            }
+
             const item = await fetchTodoItemById(dbConnection, itemId);
             if (!item) {
                 req.flash('error', 'Item not found');
