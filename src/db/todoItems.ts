@@ -13,51 +13,26 @@ export class TodoListItem {
 }
 
 export const fetchTodoItems = async (dbConnection: mysql.Connection): Promise<TodoListItem[]> => {
-    try {
-        const [rows] = await dbConnection.query('SELECT * FROM todo_items');
+    const [rows] = await dbConnection.query('SELECT * FROM todo_items');
 
-        if (!Array.isArray(rows) || rows.length === 0) {
-            return [];
-        }
-
-        return rows.map((row: any) => new TodoListItem(row.name, row.id, row.done)); // TODO: any
-    } catch (error) {
-        console.error('Failed to fetch todo items:', error);
-        throw error;
+    if (!Array.isArray(rows) || rows.length === 0) {
+        return [];
     }
+
+    return rows.map((row: any) => new TodoListItem(row.name, row.id, row.done)); // TODO: any
 };
 
 export const removeTodoItem = async (dbConnection: mysql.Connection, itemId: string): Promise<void> => {
-    try {
-        await dbConnection.query('DELETE FROM todo_items WHERE id = ?', [itemId]);
-        return;
-    }
-    catch (error) {
-        console.error('Failed to remove todo item:', error);
-        throw error;
-    }
+    await dbConnection.query('DELETE FROM todo_items WHERE id = ?', [itemId]);
 }
 
 export const completeTodoItem = async (dbConnection: mysql.Connection, itemId: string): Promise<void> => {
-    try {
-        await dbConnection.query('UPDATE todo_items SET done = NOT done WHERE id = ?', [itemId]);
-        return;
-    } catch (error) {
-        console.error('Failed to change complete state of todo item:', error);
-        throw error;
-    }
+    await dbConnection.query('UPDATE todo_items SET done = NOT done WHERE id = ?', [itemId]);
 };
 
 export const registerTodoItem = async (dbConnection: mysql.Connection, item: TodoListItem): Promise<void> => {
-    try {
-        await dbConnection.query(
-            'INSERT INTO todo_items (id, name, done) VALUES (?, ?, ?)',
-            [item.id, item.name, item.done]
-        );
-        return;
-    }
-    catch (error) {
-        console.error('Failed to register todo item:', error);
-        throw error;
-    }
+    await dbConnection.query(
+        'INSERT INTO todo_items (id, name, done) VALUES (?, ?, ?)',
+        [item.id, item.name, item.done]
+    );
 };
