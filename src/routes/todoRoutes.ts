@@ -10,7 +10,6 @@ export const todoRoutes = (dbConnection: mysql.Connection) => {
         try {
             const items = await fetchTodoItems(dbConnection)
             res.render('home', { 
-                title: 'Home',
                 items,
                 success: req.flash('success'),
                 error: req.flash('error'),
