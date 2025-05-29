@@ -194,7 +194,6 @@ async function main() {
 
     app.post('/items/register', async (req, res) => {
         const { name } = req.body;
-
         if (!name) {
             req.flash('error', 'Item name is required');
             res.redirect('/');
@@ -202,6 +201,7 @@ async function main() {
         }
 
         const uuid = v4();
+
         try {
             await registerTodoItem(dbConnection, new TodoListItem(name, uuid, false))
             req.flash('success', 'Item added successfully');
