@@ -7,15 +7,19 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <h1>アイテムを編集</h1>
-    <form action="/items/modify/<%= item.id %>" method="POST">
-        <label for="name">名前:</label>
-        <input type="text" id="name" name="name" value="<%= item.name %>" required>
-        <button type="submit">更新</button>
-    </form>
-    <form action="/items/delete/<%= item.id %>" method="POST" style="display:inline;">
-        <button type="submit">削除</button>
-    </form>
-    <a href="/">戻る</a>
+    <div class="main">
+        <h1>アイテムを編集</h1>
+        <form action="/items/modify/<%= item.id %>" method="POST">
+            <label for="name">名前:</label>
+            <input type="text" id="name" name="name" value="<%= item.name %>" required>
+            <button class="primary" type="submit">更新</button>
+        </form>
+        <form action="/items/delete/<%= item.id %>" method="POST" style="display:inline;">
+            <button class="danger" type="submit">削除</button>
+        </form>
+        <form action="/" method="GET" style="display:inline;">
+            <button type="submit">戻る</button>
+        </form>
+    </div>
 </body>
 </html>
