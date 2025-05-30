@@ -1,10 +1,10 @@
 # todoApp
 Express.js + ejs + MySQL
 ## Setup
-- TODO: list all implicit operations and dependencies
+TODO: List all implicit operations and dependencies here
 - [Install MySQL server](https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#apt-repo-fresh-install)
   - Create database named "todoApp" `create database todoApp;`
-- set environment variables
+- Set environment variables
   - `.env`
   - `DB_HOST=your_hostname`
   - `DB_USER=your_username`
