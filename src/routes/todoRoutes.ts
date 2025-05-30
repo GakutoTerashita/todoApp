@@ -1,7 +1,7 @@
 import express from 'express';
-import { DbController, TodoListItem } from '../db/todoItems';
-import { v4 } from 'uuid';
-import mysql from 'mysql2/promise';
+import { TodoListItem } from '../db/todoListItem';
+import { DbController } from '../db/control';
+import { v4 as uuidV4 } from 'uuid';
 
 export const todoRoutes = (dbController: DbController ) => {
     const router = express.Router();
@@ -74,9 +74,12 @@ export const todoRoutes = (dbController: DbController ) => {
                 return;
             }
 
-            const uuid = v4();
-
-            await dbController.registerTodoItem(new TodoListItem(name, uuid, false))
+            const newItem: TodoListItem = {
+                id: uuidV4(),
+                name,
+                done: false
+            }
+            await dbController.registerTodoItem(newItem);
             req.flash('success', 'Item added successfully');
             res.redirect('/');
         } catch (error) {

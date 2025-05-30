@@ -4,8 +4,7 @@ import session from 'express-session';
 import flash from 'connect-flash';
 import dotenv from 'dotenv';
 import { todoRoutes } from './routes/todoRoutes';
-import { connectDb, createTables } from './db/connection';
-import { DbController } from './db/todoItems';
+import { DbController } from './db/control';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -15,11 +14,8 @@ const app = express();
 
 async function main() {
     const PORT = process.env.PORT || 3000;
-    const dbConnection = await connectDb();
-
-    await createTables(dbConnection);
-
-    const dbController = new DbController(dbConnection);
+    const dbController = await DbController.connect();
+    dbController.installTables();
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));

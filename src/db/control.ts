@@ -1,16 +1,5 @@
 import mysql from 'mysql2/promise';
-
-export class TodoListItem {
-    id: string;
-    name: string;
-    done: boolean;
-
-    constructor(name: string, id: string, done: boolean) {
-        this.id = id;
-        this.name = name;
-        this.done = done;
-    }
-}
+import { TodoListItem } from './todoListItem';
 
 export class DbController {
     dbConnection: mysql.Connection;
@@ -19,6 +8,33 @@ export class DbController {
         this.dbConnection = dbConnection;
     }
 
+    static connect = async (): Promise<DbController> => {
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'todoApp',
+            port: parseInt(process.env.DB_PORT || '3306', 10),
+        });
+        return new DbController(connection);
+    };
+
+    installTables = async (): Promise<void> => {
+        await this.dbConnection.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id VARCHAR(36) PRIMARY KEY,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await this.dbConnection.query(`
+            CREATE TABLE IF NOT EXISTS todo_items (
+                id VARCHAR(36) PRIMARY KEY,
+                name TEXT NOT NULL,
+                done BOOLEAN DEFAULT FALSE
+            );
+        `);
+    };
+
     fetchTodoItemsDoneNot = async (): Promise<TodoListItem[]> => {
         const [rows] = await this.dbConnection.query('SELECT * FROM todo_items WHERE done != true');
 
@@ -26,7 +42,13 @@ export class DbController {
             return [];
         }
 
-        return rows.map((row: any) => new TodoListItem(row.name, row.id, row.done)); // TODO: any
+        return rows.map((row: any) => {
+            return {
+                id: row.id,
+                name: row.name,
+                done: row.done
+            }
+        }); // TODO: any
     };
 
     fetchTodoItemsDone = async (): Promise<TodoListItem[]> => {
@@ -36,7 +58,13 @@ export class DbController {
             return [];
         }
 
-        return rows.map((row: any) => new TodoListItem(row.name, row.id, row.done)); // TODO: any
+        return rows.map((row: any) => {
+            return {
+                id: row.id,
+                name: row.name,
+                done: row.done
+            }
+        }); // TODO: any
     };
 
     fetchTodoItemById = async (itemId: string): Promise<TodoListItem | null> => {
@@ -45,7 +73,11 @@ export class DbController {
             return null;
         }
         const row = rows[0] as any;
-        return new TodoListItem(row.name, row.id, row.done);
+        return {
+            id: row.id,
+            name: row.name,
+            done: row.done
+        };
     }
 
     removeTodoItem = async (itemId: string): Promise<void> => {
