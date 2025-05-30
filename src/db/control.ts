@@ -15,6 +15,7 @@ export class DbController {
             password: process.env.DB_PASSWORD || '',
             database: process.env.DB_NAME || 'todoApp',
             port: parseInt(process.env.DB_PORT || '3306', 10),
+            dateStrings: true,
         });
         return new DbController(connection);
     };
@@ -28,11 +29,39 @@ export class DbController {
         `);
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS todo_items (
-                id VARCHAR(36) PRIMARY KEY,
-                name TEXT NOT NULL,
-                done BOOLEAN DEFAULT FALSE
+            id VARCHAR(36) PRIMARY KEY,
+            name TEXT NOT NULL,
+            done BOOLEAN DEFAULT FALSE,
+            due_date DATETIME DEFAULT NULL
             );
         `);
+
+        // Ensure all columns exist (add missing columns if needed)
+        const [columns]: any = await this.dbConnection.query(`
+            SHOW COLUMNS FROM todo_items
+        `);
+        const columnNames = columns.map((col: any) => col.Field);
+
+        if (!columnNames.includes('due_date')) {
+            await this.dbConnection.query(`
+            ALTER TABLE todo_items ADD COLUMN due_date DATETIME DEFAULT NULL
+            `);
+        }
+        if (!columnNames.includes('done')) {
+            await this.dbConnection.query(`
+            ALTER TABLE todo_items ADD COLUMN done BOOLEAN DEFAULT FALSE
+            `);
+        }
+        if (!columnNames.includes('name')) {
+            await this.dbConnection.query(`
+            ALTER TABLE todo_items ADD COLUMN name TEXT NOT NULL
+            `);
+        }
+        if (!columnNames.includes('id')) {
+            await this.dbConnection.query(`
+            ALTER TABLE todo_items ADD COLUMN id VARCHAR(36) PRIMARY KEY
+            `);
+        }
     };
 
     fetchTodoItemsDoneNot = async (): Promise<TodoListItem[]> => {
@@ -90,8 +119,8 @@ export class DbController {
 
     registerTodoItem = async (item: TodoListItem): Promise<void> => {
         await this.dbConnection.query(
-            'INSERT INTO todo_items (id, name, done) VALUES (?, ?, ?)',
-            [item.id, item.name, item.done]
+            'INSERT INTO todo_items (id, name, done, due_date) VALUES (?, ?, ?, ?)',
+            [item.id, item.name, item.done, item.dueDate || null]
         );
     };
 

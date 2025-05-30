@@ -13,6 +13,7 @@
             <form class="reg-item-name" action="/items/register" method="POST">
                 <label for="name"></label>
                 <input type="text" id="name" name="name" placeholder="ここにやることを入力..." required>
+                <input type="date" id="dueDate" name="dueDate" placeholder="期限を入力...(任意)">
                 <button class="primary" type="submit">登録</button>
             </form>
             <%- include('./partials/flash') %>

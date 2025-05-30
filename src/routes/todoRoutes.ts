@@ -67,7 +67,7 @@ export const todoRoutes = (dbController: DbController ) => {
 
     router.post('/items/register', async (req, res) => {
         try {
-            const { name } = req.body;
+            const { name, dueDate } = req.body;
             if (!name) {
                 req.flash('error', 'Item name is required');
                 res.redirect('/');
@@ -77,7 +77,8 @@ export const todoRoutes = (dbController: DbController ) => {
             const newItem: TodoListItem = {
                 id: uuidV4(),
                 name,
-                done: false
+                done: false,
+                dueDate: dueDate || undefined // Optional field for due date
             }
             await dbController.registerTodoItem(newItem);
             req.flash('success', 'Item added successfully');
