@@ -6,7 +6,14 @@ import { v4 as uuidV4 } from 'uuid';
 export const todoRoutes = (dbController: DbController): Router => {
     const router = express.Router();
 
-    router.get('/', async (req, res) => {
+    const is_login = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        if (req.user) {
+            return next();
+        }
+        res.redirect('/auth');
+    };
+
+    router.get('/', is_login, async (req, res) => {
         try {
             const items = await dbController.fetchTodoItemsDoneNot()
             const itemsDone = await dbController.fetchTodoItemsDone();

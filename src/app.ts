@@ -18,10 +18,7 @@ async function main() {
     const dbController = await DbController.connect();
     dbController.installTables();
 
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use(express.static(path.join(__dirname, '../public')));
-    app.use(session({
+    const sessionOption: session.SessionOptions = {
         secret: process.env.SESSION_SECRET || 'defaultShouldNotBeUsedInProduction',
         saveUninitialized: true,
         resave: false,
@@ -29,7 +26,11 @@ async function main() {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24, // 1 day
         },
-    }));
+    };
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(express.static(path.join(__dirname, '../public')));
+    app.use(session(sessionOption));
     app.use(flash());
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
@@ -38,7 +39,7 @@ async function main() {
         res.redirect('/todo');
     });
     app.use('/todo', todoRoutes(dbController));
-    app.use('/auth', authRoutes(dbController));
+    app.use('/auth', authRoutes(dbController, sessionOption));
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
