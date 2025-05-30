@@ -4,6 +4,13 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import flash from "connect-flash";
+import { RowDataPacket } from "mysql2";
+
+interface UserData extends RowDataPacket {
+    id: string;
+    password: string;
+    created_at: string;
+}
 
 export const authRoutes = (dbController: DbController, sessionOption: session.SessionOptions): Router => {
     const router = express.Router();
@@ -16,6 +23,7 @@ export const authRoutes = (dbController: DbController, sessionOption: session.Se
     router.post("/login", passport.authenticate('local', {
         successRedirect: '/todo',
         failureRedirect: '/auth',
+        failureFlash: true,
     }));
 
     passport.use(new LocalStrategy({
@@ -26,15 +34,21 @@ export const authRoutes = (dbController: DbController, sessionOption: session.Se
 
     }, async (input_id, input_password, done) => {
         try {
-            const result = await dbController.dbConnection.query('SELECT * FROM users WHERE id = ?', [input_id]);
-            const login_data = result[0];
-            if (!login_data) {
+            const result = await dbController.dbConnection.query<UserData[]>('SELECT * FROM users WHERE id = ?', [input_id]);
+            const [login_data, fieldPacket] = result;
+            if (!login_data || login_data.length === 0) {
+                console.warn(`Login attempt with non-existing user ID: ${input_id}`);
                 return done(null, false, { message: 'User not found' });
             }
-            if ((login_data as any).password !== input_password) {
-                return done(null, false, { message: 'Incorrect password' });
+            const firstRow = login_data[0];
+            console.warn(`User password ${firstRow.password}`);
+            console.warn(`input_password: ${input_password}`);
+            if (firstRow.password === input_password) {
+                console.info(`User ${input_id} logged in successfully`);
+                return done(null, login_data);
             }
-            return done(null, login_data);
+            console.warn(`Incorrect password for user ID: ${input_id}`);
+            return done(null, false, { message: 'Incorrect password' });
         } catch (error) {
             console.error('Error during user authentication:', error);
             return done(null, false, { message: 'Database error' });
