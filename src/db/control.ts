@@ -65,7 +65,9 @@ export class DbController {
     };
 
     fetchTodoItemsDoneNot = async (): Promise<TodoListItem[]> => {
-        const [rows] = await this.dbConnection.query('SELECT * FROM todo_items WHERE done != true ORDER BY due_date IS NULL ASC, due_date ASC');
+        const [rows] = await this.dbConnection.query(`
+            SELECT * FROM todo_items WHERE done != true ORDER BY due_date IS NULL ASC, due_date ASC
+        `);
 
         if (!Array.isArray(rows) || rows.length === 0) {
             return [];
