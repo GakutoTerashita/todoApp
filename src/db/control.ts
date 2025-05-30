@@ -24,7 +24,6 @@ export class DbController {
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS users (
             id VARCHAR(36) PRIMARY KEY UNIQUE,
-            username VARCHAR(50) NOT NULL,
             password VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -39,11 +38,6 @@ export class DbController {
         if (!userColumnNames.includes('id')) {
             await this.dbConnection.query(`
             ALTER TABLE users ADD COLUMN id VARCHAR(36) PRIMARY KEY UNIQUE
-            `);
-        }
-        if (!userColumnNames.includes('username')) {
-            await this.dbConnection.query(`
-            ALTER TABLE users ADD COLUMN username VARCHAR(50) NOT NULL
             `);
         }
         if (!userColumnNames.includes('password')) {
