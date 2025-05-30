@@ -1,0 +1,25 @@
+<% if (item.done) { %>
+    <li class="item cleared-item">
+<% } else { %>
+    <li class="item">
+<% } %>
+        <div class="item-name">
+            <%= item.name %>
+        </div>
+        <% if (item.dueDate) { %>
+            期限&#58; <%= item.dueDate %>
+        <% } %>
+        <form action="/items/modify/<%= item.id %>" method="GET" style="display:inline">
+            <button type="submit">編集</button>
+        </form>
+        <form action="/items/delete/<%= item.id %>" method="POST" style="display:inline;">
+            <button class="danger" type="submit">削除</button>
+        </form>
+        <form action="/items/complete/<%= item.id %>" method="POST" style="display:inline;">
+            <% if (item.done) {%>
+                <button type="submit">戻す</button>
+            <% } else { %>
+                <button class="primary" type="submit">完了</button>
+            <% } %>
+        </form>
+    </li>

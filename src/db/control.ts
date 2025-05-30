@@ -75,7 +75,8 @@ export class DbController {
             return {
                 id: row.id,
                 name: row.name,
-                done: row.done
+                done: row.done,
+                dueDate: row.due_date || undefined // Optional field for due date
             }
         }); // TODO: any
     };
@@ -91,7 +92,8 @@ export class DbController {
             return {
                 id: row.id,
                 name: row.name,
-                done: row.done
+                done: row.done,
+                dueDate: row.due_date || undefined // Optional field for due date
             }
         }); // TODO: any
     };
@@ -105,7 +107,8 @@ export class DbController {
         return {
             id: row.id,
             name: row.name,
-            done: row.done
+            done: row.done,
+            dueDate: row.due_date || undefined // Optional field for due date
         };
     }
 
