@@ -29,10 +29,10 @@ export class DbController {
         `);
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS todo_items (
-            id VARCHAR(36) PRIMARY KEY,
-            name TEXT NOT NULL,
-            done BOOLEAN DEFAULT FALSE,
-            due_date DATETIME DEFAULT NULL
+                id VARCHAR(36) PRIMARY KEY,
+                name TEXT NOT NULL,
+                done BOOLEAN DEFAULT FALSE,
+                due_date DATETIME DEFAULT NULL
             );
         `);
 
