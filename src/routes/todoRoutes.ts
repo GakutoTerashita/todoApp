@@ -1,16 +1,16 @@
-import express from 'express';
+import express, { Router } from 'express';
 import { TodoListItem } from '../db/todoListItem';
 import { DbController } from '../db/control';
 import { v4 as uuidV4 } from 'uuid';
 
-export const todoRoutes = (dbController: DbController ) => {
+export const todoRoutes = (dbController: DbController): Router => {
     const router = express.Router();
 
     router.get('/', async (req, res) => {
         try {
             const items = await dbController.fetchTodoItemsDoneNot()
             const itemsDone = await dbController.fetchTodoItemsDone();
-            res.render('home', { 
+            res.render('home', {
                 items,
                 itemsDone,
                 success: req.flash('success'),
@@ -38,7 +38,7 @@ export const todoRoutes = (dbController: DbController ) => {
 
             await dbController.removeTodoItem(itemId)
             req.flash('success', 'Removed item successfully');
-            res.redirect('/'); 
+            res.redirect('/');
         } catch (error) {
             req.flash('error', 'Failed to remove item');
             console.error('Error removing item:', error);
@@ -57,7 +57,7 @@ export const todoRoutes = (dbController: DbController ) => {
         try {
             await dbController.completeTodoItem(itemId)
             req.flash('success', 'Changed item status successfully');
-            res.redirect('/'); 
+            res.redirect('/');
         } catch (error) {
             req.flash('error', 'Failed to change item status');
             console.error('Error changing item status:', error);
@@ -117,7 +117,7 @@ export const todoRoutes = (dbController: DbController ) => {
         try {
             const itemId = req.params.id;
             const { name } = req.body;
-            
+
             if (!itemId || !name) {
                 req.flash('error', 'Item ID and name are required');
                 res.redirect('/');

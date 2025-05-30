@@ -5,6 +5,7 @@ import flash from 'connect-flash';
 import dotenv from 'dotenv';
 import { todoRoutes } from './routes/todoRoutes';
 import { DbController } from './db/control';
+import { authRoutes } from './routes/authRoutes';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -33,7 +34,11 @@ async function main() {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
 
-    app.use('/', todoRoutes(dbController));
+    app.get('/', (req, res) => {
+        res.redirect('/todo');
+    });
+    app.use('/todo', todoRoutes(dbController));
+    app.use('/auth', authRoutes(dbController));
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
