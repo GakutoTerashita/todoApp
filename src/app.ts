@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { todoRoutes } from './routes/todoRoutes';
 import { DbController } from './db/control';
 import { authRoutes } from './routes/authRoutes';
+import passport, { authenticate } from 'passport';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -31,6 +32,7 @@ async function main() {
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static(path.join(__dirname, '../public')));
     app.use(session(sessionOption));
+    app.use(passport.authenticate('session'));
     app.use(flash());
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));

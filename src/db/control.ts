@@ -24,7 +24,7 @@ export class DbController {
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS users (
             id VARCHAR(36) PRIMARY KEY UNIQUE,
-            password VARCHAR(255) NOT NULL,
+            hashed_password VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -42,7 +42,7 @@ export class DbController {
         }
         if (!userColumnNames.includes('password')) {
             await this.dbConnection.query(`
-            ALTER TABLE users ADD COLUMN password VARCHAR(255) NOT NULL
+            ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255) NOT NULL
             `);
         }
         if (!userColumnNames.includes('created_at')) {

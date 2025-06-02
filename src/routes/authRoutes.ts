@@ -5,11 +5,16 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import flash from "connect-flash";
 import { RowDataPacket } from "mysql2";
+import bcrypt from "bcrypt";
 
-interface UserData extends RowDataPacket {
-    id: string;
-    password: string;
-    created_at: string;
+declare global {
+    namespace Express {
+        interface User extends RowDataPacket {
+            id: string;
+            hashed_password: string;
+            created_at: string;
+        }
+    }
 }
 
 export const authRoutes = (dbController: DbController, sessionOption: session.SessionOptions): Router => {
@@ -26,48 +31,53 @@ export const authRoutes = (dbController: DbController, sessionOption: session.Se
         failureFlash: true,
     }));
 
-    passport.use(new LocalStrategy({
-        usernameField: 'id',
-        passwordField: 'password',
-        session: true,
-        passReqToCallback: false,
+    router.post("/logout", (req, res) => {
+        req.logout((err) => {
+            if (err) {
+                console.error('Error during logout:', err);
+                return res.redirect('/auth');
+            }
+            req.flash('success', 'You have been logged out successfully.');
+            res.redirect('/auth');
+        });
+    });
 
-    }, async (input_id, input_password, done) => {
+    passport.use(new LocalStrategy(async function verify(id, password, cb) {
         try {
-            const result = await dbController.dbConnection.query<UserData[]>('SELECT * FROM users WHERE id = ?', [input_id]);
-            const [login_data, fieldPacket] = result;
-            if (!login_data || login_data.length === 0) {
-                console.warn(`Login attempt with non-existing user ID: ${input_id}`);
-                return done(null, false, { message: 'User not found' });
+            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
+            if (!Array.isArray(row) || row.length === 0) {
+                return cb(null, false, { message: 'Incorrect username.' });
             }
-            const firstRow = login_data[0];
-            console.warn(`User password ${firstRow.password}`);
-            console.warn(`input_password: ${input_password}`);
-            if (firstRow.password === input_password) {
-                console.info(`User ${input_id} logged in successfully`);
-                return done(null, login_data);
-            }
-            console.warn(`Incorrect password for user ID: ${input_id}`);
-            return done(null, false, { message: 'Incorrect password' });
+
+            bcrypt.compare(password, row[0].hashed_password, (err, isMatch) => {
+                if (err) {
+                    console.error('Error comparing passwords:', err);
+                    return cb(err);
+                }
+                if (!isMatch) {
+                    return cb(null, false, { message: 'Incorrect password.' });
+                }
+                return cb(null, row[0]);
+            });
         } catch (error) {
             console.error('Error during user authentication:', error);
-            return done(null, false, { message: 'Database error' });
+            return cb(error);
         }
     }));
-    passport.serializeUser((user: any, done) => {
-        done(null, user.id);
+    passport.serializeUser<string>((user, cb) => {
+        cb(null, user.id);
     });
-    passport.deserializeUser(async (id, done) => {
+    passport.deserializeUser<string>(async (id, cb) => {
         try {
-            const result = await dbController.dbConnection.query('SELECT * FROM users WHERE id = ?', [id]);
-            const user = result[0];
+            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
+            const user = row[0];
             if (!user) {
-                return done(new Error('User not found'));
+                return cb(new Error('User not found'));
             }
-            done(null, user);
+            cb(null, user);
         } catch (error) {
             console.error('Error during user deserialization:', error);
-            done(error);
+            cb(error);
         }
     });
 
