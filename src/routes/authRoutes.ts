@@ -67,18 +67,18 @@ export const authRoutes = (dbController: DbController): Router => {
 
 
     router.post("/login",
-        passport.authenticate(strategy),
+        passport.authenticate(
+            strategy,
+            {
+                successRedirect: '/todo',
+                failureRedirect: '/auth',
+                failureFlash: true,
+                successFlash: 'You have successfully logged in.',
+            },
+        ),
         (req, res, next) => {
             console.log('Login attempt for user:', req.body.id);
-            if (req.isAuthenticated()) {
-                console.log('User authenticated successfully:', req.user);
-                req.flash('success', 'You have been logged in successfully.');
-                return res.redirect('/todo');
-            } else {
-                console.warn('Authentication failed for user:', req.body.id);
-                req.flash('error', 'Invalid username or password.');
-                return res.redirect('/auth');
-            }
+            next();
         }
     );
 
