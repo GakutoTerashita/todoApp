@@ -107,6 +107,7 @@ export class DbController {
         LEFT JOIN users AS u ON ti.created_by = u.id
     `;
     fetchTodoItemsDoneNot = async (fetchedBy: string): Promise<TodoListItem[]> => {
+        console.log('fetchTodoItemsDoneNot called with fetchedBy:', fetchedBy);
         const [rows] = await this.dbConnection.query(`
             ${DbController.BASE_QUERY_FETCH_TODO_ITEMS}
             WHERE u.id = ? AND ti.done != true ORDER BY ti.due_date IS NULL ASC, ti.due_date ASC
@@ -146,7 +147,9 @@ export class DbController {
     };
 
     fetchTodoItemById = async (itemId: string): Promise<TodoListItem | null> => {
-        const [rows] = await this.dbConnection.query('SELECT * FROM todo_items WHERE id = ?', [itemId]);
+        const [rows] = await this.dbConnection.query(`
+            SELECT * FROM todo_items WHERE id = ?
+            `, [itemId])
         if (!Array.isArray(rows) || rows.length === 0) {
             return null;
         }
@@ -160,11 +163,16 @@ export class DbController {
     }
 
     removeTodoItem = async (itemId: string): Promise<void> => {
-        await this.dbConnection.query('DELETE FROM todo_items WHERE id = ?', [itemId]);
+        await this.dbConnection.query(`
+            DELETE FROM todo_items WHERE id = ?
+        `, [itemId]);
     }
 
     completeTodoItem = async (itemId: string): Promise<void> => {
-        await this.dbConnection.query('UPDATE todo_items SET done = NOT done WHERE id = ?', [itemId]);
+        console.log('completeTodoItem called with itemId:', itemId);
+        await this.dbConnection.query(`
+            UPDATE todo_items SET done = NOT done WHERE id = ?
+        `, [itemId]);
     };
 
     registerTodoItem = async (item: TodoListItem, createdBy: string): Promise<void> => {
@@ -176,7 +184,7 @@ export class DbController {
 
     updateTodoItemNameById = async (itemId: string, name: string): Promise<void> => {
         await this.dbConnection.query(
-            'UPDATE todo_items SET name = ? WHERE id = ?',
+            `UPDATE todo_items SET name = ? WHERE id = ?`,
             [name, itemId]
         );
     }

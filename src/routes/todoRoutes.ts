@@ -34,9 +34,9 @@ export const todoRoutes = (dbController: DbController): Router => {
         res.send('error'); // TODO: Create an error page
     });
 
-    router.post('/items/delete/:id', is_login, async (req, res) => {
+    router.post('/items/delete/:itemId', is_login, async (req, res) => {
         try {
-            const itemId = req.params.id;
+            const itemId = req.params.itemId;
             if (!itemId) {
                 req.flash('error', 'Item ID is required');
                 res.redirect('/');
@@ -53,8 +53,9 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.post('/items/complete/:id', is_login, async (req, res) => {
-        const itemId = req.params.id;
+    router.post('/items/complete/:itemId', is_login, async (req, res) => {
+        console.log(req.params);
+        const itemId = req.params.itemId;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
             res.redirect('/');
@@ -97,9 +98,9 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.get('/items/modify/:id', is_login, async (req, res) => {
+    router.get('/items/modify/:itemId', is_login, async (req, res) => {
         try {
-            const itemId = req.params.id;
+            const itemId = req.params.itemId;
             if (!itemId) {
                 req.flash('error', 'Item ID is required');
                 res.redirect('/');
@@ -120,9 +121,9 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.post('/items/modify/:id', is_login, async (req, res) => {
+    router.post('/items/modify/:itemId', is_login, async (req, res) => {
         try {
-            const itemId = req.params.id;
+            const itemId = req.params.itemId;
             const { name } = req.body;
 
             if (!itemId || !name) {
