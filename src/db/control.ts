@@ -98,11 +98,11 @@ export class DbController {
 
     static BASE_QUERY_FETCH_TODO_ITEMS = `
         SELECT 
-            ti.id, 
+            ti.id AS item_id,
             ti.name, 
             ti.done, 
             ti.due_date, 
-            u.id
+            u.id AS user_id
         FROM todo_items AS ti
         LEFT JOIN users AS u ON ti.created_by = u.id
     `;
@@ -119,7 +119,7 @@ export class DbController {
 
         return rows.map((row: any) => {
             return {
-                id: row.id,
+                id: row.item_id,
                 name: row.name,
                 done: row.done,
                 dueDate: row.due_date || undefined // Optional field for due date
@@ -138,7 +138,7 @@ export class DbController {
 
         return rows.map((row: any) => {
             return {
-                id: row.id,
+                id: row.item_id,
                 name: row.name,
                 done: row.done,
                 dueDate: row.due_date || undefined // Optional field for due date
