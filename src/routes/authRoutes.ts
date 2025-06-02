@@ -94,8 +94,8 @@ export const authRoutes = (dbController: DbController): Router => {
     });
 
     router.post("/register", async (req, res) => {
-        const { id, password } = req.body;
-        if (!id || !password) {
+        const { username, password } = req.body;
+        if (!username || !password) {
             req.flash('error', 'Username and password are required.');
             return res.redirect('/auth');
         }
@@ -104,7 +104,7 @@ export const authRoutes = (dbController: DbController): Router => {
             const hashedPassword = await bcrypt.hash(password, 10);
             const [result, _] = await dbController.dbConnection.query<ResultSetHeader>(
                 'INSERT INTO users (id, hashed_password) VALUES (?, ?)',
-                [id, hashedPassword]
+                [username, hashedPassword]
             );
             if (result.affectedRows > 0) {
                 req.flash('success', 'Registration successful. You can now log in.');
