@@ -8,6 +8,7 @@ import { DbController } from './db/control';
 import { authRoutes } from './routes/authRoutes';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
+const MySQLStore = require('express-mysql-session')(session);
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -20,10 +21,12 @@ async function main() {
     const dbController = await DbController.connect();
     dbController.installTables();
 
+    const sessionStore = new MySQLStore({}, dbController.dbConnection);
     const sessionOption: session.SessionOptions = {
         secret: process.env.SESSION_SECRET || 'defaultShouldNotBeUsedInProduction',
         saveUninitialized: true,
         resave: false,
+        store: sessionStore,
         cookie: {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24, // 1 day
