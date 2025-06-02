@@ -17,23 +17,24 @@ declare global {
 
 export const authRoutes = (dbController: DbController): Router => {
     const router = express.Router();
-    const strategy = new LocalStrategy(async (id, password, cb) => {
-        console.log('Authenticating attempt for user:', id);
+
+    const strategy = new LocalStrategy(async (username, password, cb) => {
+        console.log('Authenticating attempt for user:', username);
         try {
-            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
+            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [username]);
             if (!Array.isArray(row) || row.length === 0) {
-                console.warn('No user found with the provided username:', id);
+                console.warn('No user found with the provided username:', username);
                 return cb(null, false, { message: 'Incorrect username.' });
             }
 
             bcrypt.compare(password, row[0].hashed_password, (err, isMatch) => {
                 if (err) {
-                    console.error('Error comparing passwords for user:', id);
+                    console.error('Error comparing passwords for user:', username);
                     console.error('Error comparing passwords:', err);
                     return cb(err);
                 }
                 if (!isMatch) {
-                    console.warn('Incorrect password for user:', id);
+                    console.warn('Incorrect password for user:', username);
                     return cb(null, false, { message: 'Incorrect password.' });
                 }
                 return cb(null, row[0]);
@@ -42,15 +43,43 @@ export const authRoutes = (dbController: DbController): Router => {
             console.error('Error during user authentication:', error);
             return cb(error);
         }
-        console.log('User authenticated successfully:', id);
+        console.log('User authenticated successfully:', username);
     });
+
     passport.use(strategy);
 
+    passport.serializeUser<string>((user, cb) => {
+        cb(null, user.id);
+    });
+    passport.deserializeUser<string>(async (id, cb) => {
+        try {
+            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
+            const user = row[0];
+            if (!user) {
+                return cb(new Error('User not found'));
+            }
+            cb(null, user);
+        } catch (error) {
+            console.error('Error during user deserialization:', error);
+            cb(error);
+        }
+    });
+
+
     router.post("/login",
-        passport.authenticate(strategy, {
-            successRedirect: '/todo',
-            failureRedirect: '/auth',
-        })
+        passport.authenticate(strategy),
+        (req, res, next) => {
+            console.log('Login attempt for user:', req.body.id);
+            if (req.isAuthenticated()) {
+                console.log('User authenticated successfully:', req.user);
+                req.flash('success', 'You have been logged in successfully.');
+                return res.redirect('/todo');
+            } else {
+                console.warn('Authentication failed for user:', req.body.id);
+                req.flash('error', 'Invalid username or password.');
+                return res.redirect('/auth');
+            }
+        }
     );
 
     router.post("/logout", (req, res) => {
@@ -88,23 +117,6 @@ export const authRoutes = (dbController: DbController): Router => {
             console.error('Error during registration:', error);
             req.flash('error', 'An error occurred during registration. Please try again.');
             return res.redirect('/auth');
-        }
-    });
-
-    passport.serializeUser<string>((user, cb) => {
-        cb(null, user.id);
-    });
-    passport.deserializeUser<string>(async (id, cb) => {
-        try {
-            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
-            const user = row[0];
-            if (!user) {
-                return cb(new Error('User not found'));
-            }
-            cb(null, user);
-        } catch (error) {
-            console.error('Error during user deserialization:', error);
-            cb(error);
         }
     });
 
