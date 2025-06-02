@@ -23,10 +23,34 @@ export class DbController {
     installTables = async (): Promise<void> => {
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS users (
-                id VARCHAR(36) PRIMARY KEY,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            id VARCHAR(36) PRIMARY KEY UNIQUE,
+            hashed_password VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Ensure all columns exist (add missing columns if needed)
+        const [userColumns]: any = await this.dbConnection.query(`
+            SHOW COLUMNS FROM users
+        `);
+        const userColumnNames = userColumns.map((col: any) => col.Field);
+
+        if (!userColumnNames.includes('id')) {
+            await this.dbConnection.query(`
+            ALTER TABLE users ADD COLUMN id VARCHAR(36) PRIMARY KEY UNIQUE
+            `);
+        }
+        if (!userColumnNames.includes('hashed_password')) {
+            await this.dbConnection.query(`
+            ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255) NOT NULL
+            `);
+        }
+        if (!userColumnNames.includes('created_at')) {
+            await this.dbConnection.query(`
+            ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            `);
+        }
+
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS todo_items (
                 id VARCHAR(36) PRIMARY KEY,
@@ -37,27 +61,27 @@ export class DbController {
         `);
 
         // Ensure all columns exist (add missing columns if needed)
-        const [columns]: any = await this.dbConnection.query(`
+        const [todoItemColumns]: any = await this.dbConnection.query(`
             SHOW COLUMNS FROM todo_items
         `);
-        const columnNames = columns.map((col: any) => col.Field);
+        const todoItemColumnNames = todoItemColumns.map((col: any) => col.Field);
 
-        if (!columnNames.includes('due_date')) {
+        if (!todoItemColumnNames.includes('due_date')) {
             await this.dbConnection.query(`
             ALTER TABLE todo_items ADD COLUMN due_date DATETIME DEFAULT NULL
             `);
         }
-        if (!columnNames.includes('done')) {
+        if (!todoItemColumnNames.includes('done')) {
             await this.dbConnection.query(`
             ALTER TABLE todo_items ADD COLUMN done BOOLEAN DEFAULT FALSE
             `);
         }
-        if (!columnNames.includes('name')) {
+        if (!todoItemColumnNames.includes('name')) {
             await this.dbConnection.query(`
             ALTER TABLE todo_items ADD COLUMN name TEXT NOT NULL
             `);
         }
-        if (!columnNames.includes('id')) {
+        if (!todoItemColumnNames.includes('id')) {
             await this.dbConnection.query(`
             ALTER TABLE todo_items ADD COLUMN id VARCHAR(36) PRIMARY KEY
             `);

@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>todoApp</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
     <div class="main">
         <h1>ToDo</h1>
         <div class="flex">
-            <form class="reg-item-name" action="/items/register" method="POST">
+            <form class="reg-item-name" action="/todo/items/register" method="POST">
                 <label for="name"></label>
                 <input type="text" id="name" name="name" placeholder="ここにやることを入力..." required>
                 <input type="date" id="dueDate" name="dueDate" placeholder="期限を入力...(任意)">
@@ -21,18 +23,23 @@
         <div class="divider"></div>
         <ul>
             <% items.forEach(function(item) { %>
-            <%- include('./partials/todoItem', { item: item }) %>
-            <% }); %>
+                <%- include('./partials/todoItem', { item: item }) %>
+                    <% }); %>
         </ul>
         <div class="divider"></div>
         <details>
             <summary>完了したタスク</summary>
             <ul>
                 <% itemsDone.forEach(function(item) { %>
-                <%- include('./partials/todoItem', { item: item }) %>
-                <% }); %>
+                    <%- include('./partials/todoItem', { item: item }) %>
+                        <% }); %>
             </ul>
         </details>
+        <div class="divider"></div>
+        <form class="logout" action="/auth/logout" method="POST">
+            <button class="danger" type="submit">Logout</button>
+        </form>
     </div>
 </body>
+
 </html>
