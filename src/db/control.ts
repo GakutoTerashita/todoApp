@@ -40,7 +40,7 @@ export class DbController {
             ALTER TABLE users ADD COLUMN id VARCHAR(36) PRIMARY KEY UNIQUE
             `);
         }
-        if (!userColumnNames.includes('password')) {
+        if (!userColumnNames.includes('hashed_password')) {
             await this.dbConnection.query(`
             ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255) NOT NULL
             `);

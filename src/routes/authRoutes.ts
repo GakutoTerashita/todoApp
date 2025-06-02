@@ -4,7 +4,7 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import flash from "connect-flash";
-import { RowDataPacket } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
 
 declare global {
@@ -20,15 +20,9 @@ declare global {
 export const authRoutes = (dbController: DbController, sessionOption: session.SessionOptions): Router => {
     const router = express.Router();
 
-    router.use(session(sessionOption));
-    router.use(passport.initialize());
-    router.use(passport.session());
-    router.use(flash());
-
-    router.post("/login", passport.authenticate('local', {
+    router.post("/login", passport.authenticate('password', {
         successRedirect: '/todo',
         failureRedirect: '/auth',
-        failureFlash: true,
     }));
 
     router.post("/logout", (req, res) => {
@@ -42,19 +36,51 @@ export const authRoutes = (dbController: DbController, sessionOption: session.Se
         });
     });
 
-    passport.use(new LocalStrategy(async function verify(id, password, cb) {
+    router.post("/register", async (req, res) => {
+        const { id, password } = req.body;
+        if (!id || !password) {
+            req.flash('error', 'Username and password are required.');
+            return res.redirect('/auth');
+        }
+
+        try {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const [result, _] = await dbController.dbConnection.query<ResultSetHeader>(
+                'INSERT INTO users (id, hashed_password) VALUES (?, ?)',
+                [id, hashedPassword]
+            );
+            if (result.affectedRows > 0) {
+                req.flash('success', 'Registration successful. You can now log in.');
+                return res.redirect('/auth');
+            } else {
+                req.flash('error', 'Registration failed. Please try again.');
+                return res.redirect('/auth');
+            }
+        } catch (error) {
+            console.error('Error during registration:', error);
+            req.flash('error', 'An error occurred during registration. Please try again.');
+            return res.redirect('/auth');
+        }
+    });
+
+
+    passport.use('password', new LocalStrategy(async function verify(id, password, cb) {
+        console.log('Authenticating attempt for user:', id);
         try {
             const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
             if (!Array.isArray(row) || row.length === 0) {
+                console.warn('No user found with the provided username:', id);
                 return cb(null, false, { message: 'Incorrect username.' });
             }
 
             bcrypt.compare(password, row[0].hashed_password, (err, isMatch) => {
                 if (err) {
+                    console.error('Error comparing passwords for user:', id);
                     console.error('Error comparing passwords:', err);
                     return cb(err);
                 }
                 if (!isMatch) {
+                    console.warn('Incorrect password for user:', id);
                     return cb(null, false, { message: 'Incorrect password.' });
                 }
                 return cb(null, row[0]);
@@ -63,6 +89,7 @@ export const authRoutes = (dbController: DbController, sessionOption: session.Se
             console.error('Error during user authentication:', error);
             return cb(error);
         }
+        console.log('User authenticated successfully:', id);
     }));
     passport.serializeUser<string>((user, cb) => {
         cb(null, user.id);
