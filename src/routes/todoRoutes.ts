@@ -34,7 +34,7 @@ export const todoRoutes = (dbController: DbController): Router => {
         res.send('error'); // TODO: Create an error page
     });
 
-    router.post('/items/delete/:id', async (req, res) => {
+    router.post('/items/delete/:id', is_login, async (req, res) => {
         try {
             const itemId = req.params.id;
             if (!itemId) {
@@ -53,7 +53,7 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.post('/items/complete/:id', async (req, res) => {
+    router.post('/items/complete/:id', is_login, async (req, res) => {
         const itemId = req.params.id;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
@@ -72,7 +72,7 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.post('/items/register', async (req, res) => {
+    router.post('/items/register', is_login, async (req, res) => {
         try {
             const { name, dueDate } = req.body;
             if (!name) {
@@ -97,7 +97,7 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.get('/items/modify/:id', async (req, res) => {
+    router.get('/items/modify/:id', is_login, async (req, res) => {
         try {
             const itemId = req.params.id;
             if (!itemId) {
@@ -120,7 +120,7 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
     });
 
-    router.post('/items/modify/:id', async (req, res) => {
+    router.post('/items/modify/:id', is_login, async (req, res) => {
         try {
             const itemId = req.params.id;
             const { name } = req.body;
