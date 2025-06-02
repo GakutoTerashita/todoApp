@@ -107,7 +107,6 @@ export class DbController {
         LEFT JOIN users AS u ON ti.created_by = u.id
     `;
     fetchTodoItemsDoneNot = async (fetchedBy: string): Promise<TodoListItem[]> => {
-        console.log('fetchTodoItemsDoneNot called with fetchedBy:', fetchedBy);
         const [rows] = await this.dbConnection.query(`
             ${DbController.BASE_QUERY_FETCH_TODO_ITEMS}
             WHERE u.id = ? AND ti.done != true ORDER BY ti.due_date IS NULL ASC, ti.due_date ASC
@@ -169,7 +168,6 @@ export class DbController {
     }
 
     completeTodoItem = async (itemId: string): Promise<void> => {
-        console.log('completeTodoItem called with itemId:', itemId);
         await this.dbConnection.query(`
             UPDATE todo_items SET done = NOT done WHERE id = ?
         `, [itemId]);

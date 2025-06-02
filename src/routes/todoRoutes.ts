@@ -54,7 +54,6 @@ export const todoRoutes = (dbController: DbController): Router => {
     });
 
     router.post('/items/complete/:itemId', is_login, async (req, res) => {
-        console.log(req.params);
         const itemId = req.params.itemId;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
