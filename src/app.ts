@@ -32,6 +32,7 @@ async function main() {
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static(path.join(__dirname, '../public')));
     app.use(session(sessionOption));
+    app.use(passport.initialize());
     app.use(passport.session());
     app.use(flash());
     app.set('view engine', 'ejs');
@@ -41,7 +42,7 @@ async function main() {
         res.redirect('/todo');
     });
     app.use('/todo', todoRoutes(dbController));
-    app.use('/auth', authRoutes(dbController, sessionOption));
+    app.use('/auth', authRoutes(dbController));
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);

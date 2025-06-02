@@ -1,9 +1,7 @@
 import express, { Router } from "express";
 import { DbController } from "../db/control";
-import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import flash from "connect-flash";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
 
@@ -17,13 +15,43 @@ declare global {
     }
 }
 
-export const authRoutes = (dbController: DbController, sessionOption: session.SessionOptions): Router => {
+export const authRoutes = (dbController: DbController): Router => {
     const router = express.Router();
+    const strategy = new LocalStrategy(async (id, password, cb) => {
+        console.log('Authenticating attempt for user:', id);
+        try {
+            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
+            if (!Array.isArray(row) || row.length === 0) {
+                console.warn('No user found with the provided username:', id);
+                return cb(null, false, { message: 'Incorrect username.' });
+            }
 
-    router.post("/login", passport.authenticate('password', {
-        successRedirect: '/todo',
-        failureRedirect: '/auth',
-    }));
+            bcrypt.compare(password, row[0].hashed_password, (err, isMatch) => {
+                if (err) {
+                    console.error('Error comparing passwords for user:', id);
+                    console.error('Error comparing passwords:', err);
+                    return cb(err);
+                }
+                if (!isMatch) {
+                    console.warn('Incorrect password for user:', id);
+                    return cb(null, false, { message: 'Incorrect password.' });
+                }
+                return cb(null, row[0]);
+            });
+        } catch (error) {
+            console.error('Error during user authentication:', error);
+            return cb(error);
+        }
+        console.log('User authenticated successfully:', id);
+    });
+    passport.use(strategy);
+
+    router.post("/login",
+        passport.authenticate(strategy, {
+            successRedirect: '/todo',
+            failureRedirect: '/auth',
+        })
+    );
 
     router.post("/logout", (req, res) => {
         req.logout((err) => {
@@ -63,34 +91,6 @@ export const authRoutes = (dbController: DbController, sessionOption: session.Se
         }
     });
 
-
-    passport.use('password', new LocalStrategy(async function verify(id, password, cb) {
-        console.log('Authenticating attempt for user:', id);
-        try {
-            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
-            if (!Array.isArray(row) || row.length === 0) {
-                console.warn('No user found with the provided username:', id);
-                return cb(null, false, { message: 'Incorrect username.' });
-            }
-
-            bcrypt.compare(password, row[0].hashed_password, (err, isMatch) => {
-                if (err) {
-                    console.error('Error comparing passwords for user:', id);
-                    console.error('Error comparing passwords:', err);
-                    return cb(err);
-                }
-                if (!isMatch) {
-                    console.warn('Incorrect password for user:', id);
-                    return cb(null, false, { message: 'Incorrect password.' });
-                }
-                return cb(null, row[0]);
-            });
-        } catch (error) {
-            console.error('Error during user authentication:', error);
-            return cb(error);
-        }
-        console.log('User authenticated successfully:', id);
-    }));
     passport.serializeUser<string>((user, cb) => {
         cb(null, user.id);
     });
