@@ -15,8 +15,8 @@ export const todoRoutes = (dbController: DbController): Router => {
 
     router.get('/', is_login, async (req, res) => {
         try {
-            const items = await dbController.fetchTodoItemsDoneNot()
-            const itemsDone = await dbController.fetchTodoItemsDone();
+            const items = await dbController.fetchTodoItemsDoneNot(req.user!.id)
+            const itemsDone = await dbController.fetchTodoItemsDone(req.user!.id);
             res.render('home', {
                 items,
                 itemsDone,
@@ -87,7 +87,7 @@ export const todoRoutes = (dbController: DbController): Router => {
                 done: false,
                 dueDate: dueDate || undefined // Optional field for due date
             }
-            await dbController.registerTodoItem(newItem);
+            await dbController.registerTodoItem(newItem, req.user!.id);
             req.flash('success', 'Item added successfully');
             res.redirect('/');
         } catch (error) {

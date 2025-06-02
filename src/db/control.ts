@@ -53,10 +53,12 @@ export class DbController {
 
         await this.dbConnection.query(`
             CREATE TABLE IF NOT EXISTS todo_items (
-                id VARCHAR(36) PRIMARY KEY,
-                name TEXT NOT NULL,
-                done BOOLEAN DEFAULT FALSE,
-                due_date DATETIME DEFAULT NULL
+            id VARCHAR(36) PRIMARY KEY,
+            name TEXT NOT NULL,
+            done BOOLEAN DEFAULT FALSE,
+            due_date DATETIME DEFAULT NULL,
+            created_by VARCHAR(36) NOT NULL,
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
             );
         `);
 
@@ -88,10 +90,21 @@ export class DbController {
         }
     };
 
-    fetchTodoItemsDoneNot = async (): Promise<TodoListItem[]> => {
+    static BASE_QUERY_FETCH_TODO_ITEMS = `
+        SELECT 
+            ti.id, 
+            ti.name, 
+            ti.done, 
+            ti.due_date, 
+            u.id AS created_by_id, 
+        FROM todo_items ti
+        LEFT JOIN users u ON ti.created_by = u.id
+    `;
+    fetchTodoItemsDoneNot = async (fetcherId: string): Promise<TodoListItem[]> => {
         const [rows] = await this.dbConnection.query(`
-            SELECT * FROM todo_items WHERE done != true ORDER BY due_date IS NULL ASC, due_date ASC
-        `);
+            ${DbController.BASE_QUERY_FETCH_TODO_ITEMS}
+            WHERE created_by_id = ?, ti.done != true ORDER BY ti.due_date IS NULL ASC, ti.due_date ASC
+        `, [fetcherId]);
 
         if (!Array.isArray(rows) || rows.length === 0) {
             return [];
@@ -107,9 +120,11 @@ export class DbController {
         }); // TODO: any
     };
 
-    fetchTodoItemsDone = async (): Promise<TodoListItem[]> => {
-        const [rows] = await this.dbConnection.query('SELECT * FROM todo_items WHERE done = true');
-
+    fetchTodoItemsDone = async (fetcherId: string): Promise<TodoListItem[]> => {
+        const [rows] = await this.dbConnection.query(`
+            ${DbController.BASE_QUERY_FETCH_TODO_ITEMS}
+            WHERE created_by_id = ?, ti.done = true
+        `, [fetcherId]);
         if (!Array.isArray(rows) || rows.length === 0) {
             return [];
         }
@@ -146,10 +161,10 @@ export class DbController {
         await this.dbConnection.query('UPDATE todo_items SET done = NOT done WHERE id = ?', [itemId]);
     };
 
-    registerTodoItem = async (item: TodoListItem): Promise<void> => {
+    registerTodoItem = async (item: TodoListItem, createrId: string): Promise<void> => {
         await this.dbConnection.query(
-            'INSERT INTO todo_items (id, name, done, due_date) VALUES (?, ?, ?, ?)',
-            [item.id, item.name, item.done, item.dueDate || null]
+            'INSERT INTO todo_items (id, name, done, due_date, created_by) VALUES (?, ?, ?, ?, ?)',
+            [item.id, item.name, item.done, item.dueDate || null, createrId]
         );
     };
 
