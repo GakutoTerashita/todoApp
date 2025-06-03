@@ -1,9 +1,10 @@
 import express, { Router } from 'express';
 import { TodoListItem } from '../db/todoListItem';
-import { DbController } from '../db/control';
 import { v4 as uuidV4 } from 'uuid';
+import { PrismaClient } from '@prisma/client';
+import { completeTodoItem, fetchTodoItemById, fetchTodoItemsDone, fetchTodoItemsDoneNot, registerTodoItem, removeTodoItem, updateTodoItemNameById } from '../db/control';
 
-export const todoRoutes = (dbController: DbController): Router => {
+export const todoRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
 
     const is_login = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -15,8 +16,8 @@ export const todoRoutes = (dbController: DbController): Router => {
 
     router.get('/', is_login, async (req, res) => {
         try {
-            const items = await dbController.fetchTodoItemsDoneNot(req.user!.id)
-            const itemsDone = await dbController.fetchTodoItemsDone(req.user!.id);
+            const items = await fetchTodoItemsDoneNot(prisma, req.user!.id)
+            const itemsDone = await fetchTodoItemsDone(prisma, req.user!.id);
             res.render('home', {
                 items,
                 itemsDone,
@@ -43,7 +44,7 @@ export const todoRoutes = (dbController: DbController): Router => {
                 return;
             }
 
-            await dbController.removeTodoItem(itemId)
+            await removeTodoItem(prisma, itemId)
             req.flash('success', 'Removed item successfully');
             res.redirect('/');
         } catch (error) {
@@ -62,7 +63,7 @@ export const todoRoutes = (dbController: DbController): Router => {
         }
 
         try {
-            await dbController.completeTodoItem(itemId)
+            await completeTodoItem(prisma, itemId)
             req.flash('success', 'Changed item status successfully');
             res.redirect('/');
         } catch (error) {
@@ -87,7 +88,7 @@ export const todoRoutes = (dbController: DbController): Router => {
                 done: false,
                 dueDate: dueDate || undefined // Optional field for due date
             }
-            await dbController.registerTodoItem(newItem, req.user!.id);
+            await registerTodoItem(prisma, newItem, req.user!.id);
             req.flash('success', 'Item added successfully');
             res.redirect('/');
         } catch (error) {
@@ -106,7 +107,7 @@ export const todoRoutes = (dbController: DbController): Router => {
                 return;
             }
 
-            const item = await dbController.fetchTodoItemById(itemId);
+            const item = await fetchTodoItemById(prisma, itemId);
             if (!item) {
                 req.flash('error', 'Item not found');
                 res.redirect('/');
@@ -131,14 +132,14 @@ export const todoRoutes = (dbController: DbController): Router => {
                 return;
             }
 
-            const item = await dbController.fetchTodoItemById(itemId);
+            const item = await fetchTodoItemById(prisma, itemId);
             if (!item) {
                 req.flash('error', 'Item not found');
                 res.redirect('/');
                 return;
             }
 
-            await dbController.updateTodoItemNameById(itemId, name);
+            await updateTodoItemNameById(prisma, itemId, name);
 
             req.flash('success', 'Item modified successfully');
             res.redirect('/');

@@ -1,13 +1,12 @@
 import express, { Router } from "express";
-import { DbController } from "../db/control";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
+import { PrismaClient } from "@prisma/client";
 
 declare global {
     namespace Express {
-        interface User extends RowDataPacket {
+        interface User {
             id: string;
             hashed_password: string;
             created_at: string;
@@ -15,19 +14,22 @@ declare global {
     }
 }
 
-export const authRoutes = (dbController: DbController): Router => {
+export const authRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
 
     const strategy = new LocalStrategy(async (username, password, cb) => {
         console.log('Authenticating attempt for user:', username);
         try {
-            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [username]);
-            if (!Array.isArray(row) || row.length === 0) {
+            const user = await prisma.users.findUnique({
+                where: { id: username },
+            });
+
+            if (!user) {
                 console.warn('No user found with the provided username:', username);
                 return cb(null, false, { message: 'Incorrect username.' });
             }
 
-            bcrypt.compare(password, row[0].hashed_password, (err, isMatch) => {
+            bcrypt.compare(password, user.hashed_password, (err, isMatch) => {
                 if (err) {
                     console.error('Error comparing passwords for user:', username);
                     console.error('Error comparing passwords:', err);
@@ -37,7 +39,11 @@ export const authRoutes = (dbController: DbController): Router => {
                     console.warn('Incorrect password for user:', username);
                     return cb(null, false, { message: 'Incorrect password.' });
                 }
-                return cb(null, row[0]);
+                return cb(null, {
+                    id: user.id,
+                    hashed_password: user.hashed_password,
+                    created_at: user.created_at ? user.created_at.toISOString() : '',
+                });
             });
         } catch (error) {
             console.error('Error during user authentication:', error);
@@ -51,20 +57,26 @@ export const authRoutes = (dbController: DbController): Router => {
     passport.serializeUser<string>((user, cb) => {
         cb(null, user.id);
     });
+
     passport.deserializeUser<string>(async (id, cb) => {
         try {
-            const [row, _] = await dbController.dbConnection.query<Express.User[]>('SELECT * FROM users WHERE id = ?', [id]);
-            const user = row[0];
+            const user = await prisma.users.findUnique({
+                where: { id },
+            });
+
             if (!user) {
                 return cb(new Error('User not found'));
             }
-            cb(null, user);
+            cb(null, {
+                id: user.id,
+                hashed_password: user.hashed_password,
+                created_at: user.created_at ? user.created_at.toISOString() : '',
+            });
         } catch (error) {
             console.error('Error during user deserialization:', error);
             cb(error);
         }
     });
-
 
     router.post("/login",
         passport.authenticate(
@@ -102,11 +114,14 @@ export const authRoutes = (dbController: DbController): Router => {
 
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
-            const [result, _] = await dbController.dbConnection.query<ResultSetHeader>(
-                'INSERT INTO users (id, hashed_password) VALUES (?, ?)',
-                [username, hashedPassword]
-            );
-            if (result.affectedRows > 0) {
+            const user = await prisma.users.create({
+                data: {
+                    id: username,
+                    hashed_password: hashedPassword,
+                },
+            });
+
+            if (user) {
                 req.flash('success', 'Registration successful. You can now log in.');
                 return res.redirect('/auth');
             } else {
@@ -124,8 +139,8 @@ export const authRoutes = (dbController: DbController): Router => {
         res.render('auth.ejs', {
             success: req.flash('success'),
             error: req.flash('error'),
-        })
+        });
     });
 
     return router;
-}
+};
