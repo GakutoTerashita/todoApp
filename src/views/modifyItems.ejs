@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>アイテムを編集</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
     <div class="main">
         <h1>アイテムを編集</h1>
         <div class="flex">
-            <form class="reg-item-name" action="/items/modify/<%= item.id %>" method="POST">
+            <form class="reg-item-name" action="/todo/items/modify/<%= item.id %>" method="POST">
                 <label for="name"></label>
                 <input type="text" id="name" name="name" value="<%= item.name %>" placeholder="ここにやることを入力..." required>
                 <button class="primary" type="submit">更新</button>
@@ -25,4 +27,5 @@
         </form>
     </div>
 </body>
+
 </html>
