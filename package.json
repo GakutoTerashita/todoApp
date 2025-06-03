@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "@types/bcrypt": "^5.0.2",
     "@types/connect-flash": "^0.0.40",
     "@types/cookie-parser": "^1.4.8",
