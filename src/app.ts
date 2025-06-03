@@ -1,42 +1,48 @@
 import express from 'express';
 import path from 'path';
-import session from 'express-session';
 import flash from 'connect-flash';
 import dotenv from 'dotenv';
 import { todoRoutes } from './routes/todoRoutes';
-import { DbController } from './db/control';
+import expressSession from 'express-session';
 import { authRoutes } from './routes/authRoutes';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
-const MySQLStore = require('express-mysql-session')(session);
+import { PrismaSessionStore } from '@quixo3/prisma-session-store';
+import { PrismaClient } from '@prisma/client';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
 }
 
 const app = express();
+const prisma = new PrismaClient();
 
 async function main() {
     const PORT = process.env.PORT || 3000;
-    const dbController = await DbController.connect();
-    dbController.installTables();
 
-    const sessionStore = new MySQLStore({}, dbController.dbConnection);
-    const sessionOption: session.SessionOptions = {
-        secret: process.env.SESSION_SECRET || 'defaultShouldNotBeUsedInProduction',
-        saveUninitialized: true,
-        resave: false,
-        store: sessionStore,
-        cookie: {
-            httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24, // 1 day
-        },
-    };
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static(path.join(__dirname, '../public')));
     app.use(cookieParser());
-    app.use(session(sessionOption));
+    app.use(
+        expressSession({
+            cookie: {
+                httpOnly: true,
+                maxAge: 1000 * 60 * 60 * 24, // 1 day
+            },
+            secret: process.env.SESSION_SECRET || 'defaultShouldNotBeUsedInProduction',
+            saveUninitialized: true,
+            resave: false,
+            store: new PrismaSessionStore(
+                prisma,
+                {
+                    checkPeriod: 2 * 60 * 1000, // 2 minutes
+                    dbRecordIdIsSessionId: true,
+                    dbRecordIdFunction: undefined, // Use default function
+                }
+            ),
+        })
+    );
     app.use(passport.initialize());
     app.use(passport.session());
     app.use(flash());

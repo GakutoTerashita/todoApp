@@ -7,10 +7,11 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model sessions {
-    session_id String  @id @db.VarChar(128)
-    expires    Int     @db.UnsignedInt
-    data       String? @db.MediumText
+model Session {
+    id        String   @id
+    sid       String   @unique
+    data      String   @db.MediumText // MediumText may be needed for MySql
+    expiresAt DateTime
 }
 
 model todo_items {
