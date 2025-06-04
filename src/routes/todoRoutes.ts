@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
 import { TodoListItem } from '../db/todoListItem';
 import { v4 as uuidV4 } from 'uuid';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { completeTodoItem, fetchTodoItemById, fetchTodoItemsDone, fetchTodoItemsDoneNot, registerTodoItem, removeTodoItem, updateTodoItemNameById } from '../db/control';
 
 export const todoRoutes = (prisma: PrismaClient): Router => {
@@ -16,7 +16,8 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
 
     router.get('/', is_login, async (req, res) => {
         try {
-            const items = await fetchTodoItemsDoneNot(prisma, req.user!.id)
+            type TodoListItemWithUser = Awaited<ReturnType<typeof fetchTodoItemsDoneNot>>;
+            const items: TodoListItemWithUser = await fetchTodoItemsDoneNot(prisma, req.user!.id)
             const itemsDone = await fetchTodoItemsDone(prisma, req.user!.id);
             res.render('home', {
                 items,
@@ -86,9 +87,10 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
                 id: uuidV4(),
                 name,
                 done: false,
-                dueDate: dueDate || undefined // Optional field for due date
+                due_date: dueDate || undefined,
+                created_by: req.user!.id,
             }
-            await registerTodoItem(prisma, newItem, req.user!.id);
+            await registerTodoItem(prisma, newItem);
             req.flash('success', 'Item added successfully');
             res.redirect('/');
         } catch (error) {

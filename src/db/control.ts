@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
-import { TodoListItem } from './todoListItem';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { TodoListItem, TodoListItemWithUser } from './todoListItem';
 
-export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: string): Promise<TodoListItem[]> => {
+export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: string) => {
     const rows = await prisma.todo_items.findMany({
         select: {
             id: true,
@@ -26,17 +26,19 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: str
         id: row.id,
         name: row.name,
         done: row.done || false,
-        dueDate: row.due_date ? row.due_date.toISOString() : undefined,
+        due_date: row.due_date,
+        users: row.users,
     }));
 };
 
-export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: string): Promise<TodoListItem[]> => {
+export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: string): Promise<TodoListItemWithUser[]> => {
     const rows = await prisma.todo_items.findMany({
         select: {
             id: true,
             name: true,
             done: true,
             due_date: true,
+            created_by: true,
             users: {
                 select: { id: true },
             },
@@ -55,7 +57,9 @@ export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: string
         id: row.id,
         name: row.name,
         done: row.done || false,
-        dueDate: row.due_date ? row.due_date.toISOString() : undefined,
+        due_date: row.due_date,
+        created_by: row.created_by,
+        users: row.users,
     }));
 };
 
@@ -67,6 +71,7 @@ export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): P
             name: true,
             done: true,
             due_date: true,
+            created_by: true,
         },
     });
 
@@ -78,7 +83,8 @@ export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): P
         id: row.id,
         name: row.name,
         done: row.done || false,
-        dueDate: row.due_date ? row.due_date.toISOString() : undefined,
+        due_date: row.due_date,
+        created_by: row.created_by,
     };
 };
 
@@ -104,14 +110,14 @@ export const completeTodoItem = async (prisma: PrismaClient, itemId: string): Pr
     });
 };
 
-export const registerTodoItem = async (prisma: PrismaClient, item: TodoListItem, createdBy: string): Promise<void> => {
+export const registerTodoItem = async (prisma: PrismaClient, item: TodoListItem): Promise<void> => {
     await prisma.todo_items.create({
         data: {
             id: item.id,
             name: item.name,
             done: item.done,
-            due_date: item.dueDate ? new Date(item.dueDate) : null,
-            created_by: createdBy,
+            due_date: item.due_date ? new Date(item.due_date) : null,
+            created_by: item.created_by,
         },
     });
 };
