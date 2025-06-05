@@ -18,7 +18,14 @@ declare global {
 export const authRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
 
-    const strategy = new LocalStrategy(async (username, password, cb): Promise<((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void> => {
+    const authenticate = async (
+        username: string,
+        password: string,
+        cb: ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void)
+    ):
+        Promise<
+            ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void
+        > => {
         console.log('Authenticating attempt for user:', username);
         try {
             const user = await prisma.users.findUnique({
@@ -52,7 +59,9 @@ export const authRoutes = (prisma: PrismaClient): Router => {
             return cb(error);
         }
         console.log('User authenticated successfully:', username);
-    });
+    };
+
+    const strategy = new LocalStrategy(authenticate);
 
     passport.use(strategy);
 
