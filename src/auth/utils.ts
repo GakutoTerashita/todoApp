@@ -33,7 +33,6 @@ export class AuthenticateUtil {
         }).catch((err) => {
             console.error('Error finding user:', err);
             cb(err);
-            return;
         });
 
         // If user not found, return early
