@@ -1,4 +1,4 @@
-import { IVerifyOptions } from "passport-local";
+import { IVerifyOptions, VerifyFunction } from "passport-local";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 
@@ -23,8 +23,8 @@ export class AuthenticateUtil {
     authenticateUser = async (
         username: string,
         password: string,
-        cb: ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void)
-    ): Promise<((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void> => {
+        cb: Parameters<VerifyFunction>[2]
+    ): Promise<void> => {
         console.log('Authenticating attempt for user:', username);
 
         try {
