@@ -10,6 +10,7 @@ declare global {
             id: string;
             hashed_password: string;
             created_at: string;
+            is_admin?: boolean;
         }
     }
 }

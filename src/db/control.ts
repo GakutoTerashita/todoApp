@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { TodoListItem, TodoListItemWithUser } from './todoListItem';
 
-export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: string) => {
+export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Express.User) => {
     const rows = await prisma.todo_items.findMany({
         select: {
             id: true,
@@ -13,7 +13,7 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: str
             },
         },
         where: {
-            users: { id: fetchedBy },
+            users: fetchedBy.is_admin ? { id: fetchedBy.id } : undefined,
             done: false,
         },
         orderBy: [
@@ -31,7 +31,7 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: str
     }));
 };
 
-export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: string): Promise<TodoListItemWithUser[]> => {
+export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<TodoListItemWithUser[]> => {
     const rows = await prisma.todo_items.findMany({
         select: {
             id: true,
@@ -44,7 +44,7 @@ export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: string
             },
         },
         where: {
-            users: { id: fetchedBy },
+            users: fetchedBy.is_admin ? { id: fetchedBy.id } : undefined,
             done: true,
         },
         orderBy: [

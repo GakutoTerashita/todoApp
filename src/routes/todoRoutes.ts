@@ -8,17 +8,17 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
 
     const is_login = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        if (req.user) {
-            return next();
+        if (!req.user) {
+            res.redirect('/auth');
         }
-        res.redirect('/auth');
+        return next();
     };
 
     router.get('/', is_login, async (req, res) => {
         try {
             type TodoListItemWithUser = Awaited<ReturnType<typeof fetchTodoItemsDoneNot>>;
-            const items: TodoListItemWithUser = await fetchTodoItemsDoneNot(prisma, req.user!.id)
-            const itemsDone = await fetchTodoItemsDone(prisma, req.user!.id);
+            const items: TodoListItemWithUser = await fetchTodoItemsDoneNot(prisma, req.user!)
+            const itemsDone = await fetchTodoItemsDone(prisma, req.user!);
             res.render('home', {
                 items,
                 itemsDone,
