@@ -26,33 +26,41 @@ export class AuthenticateUtil {
         cb: ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void)
     ): Promise<((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void> => {
         console.log('Authenticating attempt for user:', username);
+
         try {
+            // Find user by username
             const user = await this._prisma.users.findUnique({
                 where: { id: username },
             });
+            // Tbh I want to resolve error handling more earlier. Possible failure is only database connection or query issues.
+            // Are there any ways to reduce the length of this try-catch block?
 
+            // If user not found, return an error
             if (!user) {
                 console.warn('No user found with the provided username:', username);
                 return cb(null, false, { message: 'Incorrect username.' });
             }
 
-            bcrypt.compare(password, user.hashed_password, (err, isMatch) => {
-                if (err) {
-                    console.error('Error comparing passwords for user:', username);
-                    console.error('Error comparing passwords:', err);
-                    return cb(err);
-                }
-                if (!isMatch) {
-                    console.warn('Incorrect password for user:', username);
-                    return cb(null, false, { message: 'Incorrect password.' });
-                }
-                return cb(null, {
-                    id: user.id,
-                    hashed_password: user.hashed_password,
-                    created_at: user.created_at ? user.created_at.toISOString() : '',
-                    is_admin: user.is_admin || false,
+            // Compare provided password with stored hashed password
+            bcrypt.compare(
+                password,
+                user.hashed_password,
+                (err: any, isMatch: boolean) => {
+                    if (err) {
+                        console.error('Error comparing passwords:', err);
+                        return cb(err);
+                    } else if (!isMatch) {
+                        console.warn('Incorrect password for user:', username);
+                        return cb(null, false, { message: 'Incorrect password.' });
+                    } else {
+                        return cb(null, {
+                            id: user.id,
+                            hashed_password: user.hashed_password,
+                            created_at: user.created_at ? user.created_at.toISOString() : '',
+                            is_admin: user.is_admin || false,
+                        });
+                    }
                 });
-            });
         } catch (error) {
             console.error('Error during user authentication:', error);
             return cb(error);
