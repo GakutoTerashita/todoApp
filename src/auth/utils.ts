@@ -108,6 +108,11 @@ export class AuthenticateUtil {
         is_admin: boolean,
     ): Promise<Express.User | UserCreationError> => {
         console.log('Creating user:', username, 'is_admin:', is_admin);
+        // Test returing Error
+        // if (username === 'test' && password === 'test') {
+        //     return new UserCreationError('Test user creation error');
+        // }
+
         if (!username || !password) {
             console.error('Username and password are required for user creation.');
             return new UserCreationError('Username and password are required.');
