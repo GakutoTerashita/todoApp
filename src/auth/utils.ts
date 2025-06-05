@@ -1,0 +1,137 @@
+import { IVerifyOptions } from "passport-local";
+import bcrypt from "bcrypt";
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+    namespace Express {
+        interface User {
+            id: string;
+            hashed_password: string;
+            created_at: string;
+            is_admin: boolean;
+        }
+    }
+}
+
+export class UserCreationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "UserCreationError";
+    }
+}
+
+export class AuthenticateUtil {
+    private _prisma: PrismaClient;
+
+    constructor(prisma: PrismaClient) {
+        this._prisma = prisma;
+    }
+
+    authenticateUser = async (
+        username: string,
+        password: string,
+        cb: ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void)
+    ):
+        Promise<
+            ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void
+        > => {
+        console.log('Authenticating attempt for user:', username);
+        try {
+            const user = await this._prisma.users.findUnique({
+                where: { id: username },
+            });
+
+            if (!user) {
+                console.warn('No user found with the provided username:', username);
+                return cb(null, false, { message: 'Incorrect username.' });
+            }
+
+            bcrypt.compare(password, user.hashed_password, (err, isMatch) => {
+                if (err) {
+                    console.error('Error comparing passwords for user:', username);
+                    console.error('Error comparing passwords:', err);
+                    return cb(err);
+                }
+                if (!isMatch) {
+                    console.warn('Incorrect password for user:', username);
+                    return cb(null, false, { message: 'Incorrect password.' });
+                }
+                return cb(null, {
+                    id: user.id,
+                    hashed_password: user.hashed_password,
+                    created_at: user.created_at ? user.created_at.toISOString() : '',
+                    is_admin: user.is_admin || false,
+                });
+            });
+        } catch (error) {
+            console.error('Error during user authentication:', error);
+            return cb(error);
+        }
+        console.log('User authenticated successfully:', username);
+    };
+
+    userSerializer = (user: Express.User, cb: (error: any, id?: string) => void): void => {
+        console.log('Serializing user:', user.id);
+        cb(null, user.id);
+    };
+
+    userDeserializer = async (
+        id: string,
+        cb: (error: any, user?: Express.User | null) => void
+    ): Promise<void> => {
+        console.log('Deserializing user with ID:', id);
+        try {
+            const user = await this._prisma.users.findUnique({
+                where: { id },
+            });
+
+            if (!user) {
+                console.warn('User not found during deserialization:', id);
+                return cb(null, null);
+            }
+
+            cb(null, {
+                id: user.id,
+                hashed_password: user.hashed_password,
+                created_at: user.created_at ? user.created_at.toISOString() : '',
+                is_admin: user.is_admin || false,
+            });
+        } catch (error) {
+            console.error('Error during user deserialization:', error);
+            cb(error);
+        }
+    };
+
+    createUser = async (
+        username: string,
+        password: string,
+        is_admin: boolean,
+    ): Promise<Express.User | UserCreationError> => {
+        console.log('Creating user:', username, 'is_admin:', is_admin);
+        if (!username || !password) {
+            console.error('Username and password are required for user creation.');
+            return new UserCreationError('Username and password are required.');
+        }
+
+        try {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const user = await this._prisma.users.create({
+                data: {
+                    id: username,
+                    hashed_password: hashedPassword,
+                    is_admin: is_admin || false,
+                },
+            });
+            console.log('User created successfully:', user.id);
+            return {
+                id: user.id,
+                hashed_password: user.hashed_password,
+                created_at: user.created_at ? user.created_at.toISOString() : '',
+                is_admin: user.is_admin || false,
+            };
+        } catch (error) {
+            console.error('Error creating user:', error);
+            return new UserCreationError('An error occurred during user creation.');
+        }
+    }
+}
