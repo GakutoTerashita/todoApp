@@ -24,10 +24,7 @@ export class AuthenticateUtil {
         username: string,
         password: string,
         cb: ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void)
-    ):
-        Promise<
-            ((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void
-        > => {
+    ): Promise<((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void> => {
         console.log('Authenticating attempt for user:', username);
         try {
             const user = await this._prisma.users.findUnique({
