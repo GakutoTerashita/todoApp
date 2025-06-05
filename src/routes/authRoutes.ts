@@ -1,6 +1,6 @@
 import express, { Router } from "express";
 import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
+import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 
@@ -10,7 +10,7 @@ declare global {
             id: string;
             hashed_password: string;
             created_at: string;
-            is_admin?: boolean;
+            is_admin: boolean;
         }
     }
 }
@@ -18,7 +18,7 @@ declare global {
 export const authRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
 
-    const strategy = new LocalStrategy(async (username, password, cb) => {
+    const strategy = new LocalStrategy(async (username, password, cb): Promise<((error: any, user?: Express.User | false, options?: IVerifyOptions) => void) | void> => {
         console.log('Authenticating attempt for user:', username);
         try {
             const user = await prisma.users.findUnique({
@@ -44,6 +44,7 @@ export const authRoutes = (prisma: PrismaClient): Router => {
                     id: user.id,
                     hashed_password: user.hashed_password,
                     created_at: user.created_at ? user.created_at.toISOString() : '',
+                    is_admin: user.is_admin || false,
                 });
             });
         } catch (error) {
@@ -72,6 +73,7 @@ export const authRoutes = (prisma: PrismaClient): Router => {
                 id: user.id,
                 hashed_password: user.hashed_password,
                 created_at: user.created_at ? user.created_at.toISOString() : '',
+                is_admin: user.is_admin || false,
             });
         } catch (error) {
             console.error('Error during user deserialization:', error);
@@ -110,12 +112,14 @@ export const authRoutes = (prisma: PrismaClient): Router => {
         const {
             username,
             password,
-            is_admin
+            is_admin_raw,
         }: {
             username: string;
             password: string;
-            is_admin?: boolean;
+            is_admin_raw: string;
         } = req.body;
+        const is_admin = is_admin_raw === 'true';
+        console.log('Registration attempt for user:', username, 'is_admin:', is_admin);
 
         if (!username || !password) {
             req.flash('error', 'Username and password are required.');

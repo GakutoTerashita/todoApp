@@ -32,6 +32,7 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Exp
 };
 
 export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<TodoListItemWithUser[]> => {
+    console.log('Fetching done todo items for user:', fetchedBy);
     const rows = await prisma.todo_items.findMany({
         select: {
             id: true,
