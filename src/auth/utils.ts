@@ -13,13 +13,6 @@ declare global {
     }
 }
 
-export class UserCreationError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "UserCreationError";
-    }
-}
-
 export class AuthenticateUtil {
     private _prisma: PrismaClient;
 
@@ -106,16 +99,16 @@ export class AuthenticateUtil {
         username: string,
         password: string,
         is_admin: boolean,
-    ): Promise<Express.User | UserCreationError> => {
+    ): Promise<Express.User | Error> => {
         console.log('Creating user:', username, 'is_admin:', is_admin);
         // Test returing Error
         // if (username === 'test' && password === 'test') {
-        //     return new UserCreationError('Test user creation error');
+        //     return new Error('Test user creation error');
         // }
 
         if (!username || !password) {
             console.error('Username and password are required for user creation.');
-            return new UserCreationError('Username and password are required.');
+            return new Error('Username and password are required.');
         }
 
         try {
@@ -136,7 +129,7 @@ export class AuthenticateUtil {
             };
         } catch (error) {
             console.error('Error creating user:', error);
-            return new UserCreationError('An error occurred during user creation.');
+            return new Error('An error occurred during user creation.');
         }
     }
 }
