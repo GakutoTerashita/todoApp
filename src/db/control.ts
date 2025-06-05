@@ -13,7 +13,7 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Exp
             },
         },
         where: {
-            users: fetchedBy.is_admin ? { id: fetchedBy.id } : undefined,
+            users: fetchedBy.is_admin ? undefined : { id: fetchedBy.id },
             done: false,
         },
         orderBy: [
@@ -44,7 +44,7 @@ export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Expres
             },
         },
         where: {
-            users: fetchedBy.is_admin ? { id: fetchedBy.id } : undefined,
+            users: fetchedBy.is_admin ? undefined : { id: fetchedBy.id },
             done: true,
         },
         orderBy: [
