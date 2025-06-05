@@ -107,7 +107,16 @@ export const authRoutes = (prisma: PrismaClient): Router => {
     });
 
     router.post("/register", async (req, res) => {
-        const { username, password } = req.body;
+        const {
+            username,
+            password,
+            is_admin
+        }: {
+            username: string;
+            password: string;
+            is_admin?: boolean;
+        } = req.body;
+
         if (!username || !password) {
             req.flash('error', 'Username and password are required.');
             return res.redirect('/auth');
@@ -119,6 +128,7 @@ export const authRoutes = (prisma: PrismaClient): Router => {
                 data: {
                     id: username,
                     hashed_password: hashedPassword,
+                    is_admin: is_admin || false,
                 },
             });
 
