@@ -27,38 +27,39 @@ export class AuthenticateUtil {
     ): Promise<void> => {
         console.log('Authenticating attempt for user:', username);
 
-        try {
-            // Find user by username
-            const user = await this._prisma.users.findUnique({
-                where: { id: username },
-            });
+        // Find user by username
+        const user = await this._prisma.users.findUnique({
+            where: { id: username },
+        }).catch((err) => {
+            console.error('Error finding user:', err);
+            cb(err);
+            return;
+        });
 
-            // If user not found, return early
-            if (!user) {
-                console.warn('No user found with the provided username:', username);
-                return cb(null, false, { message: 'Incorrect username.' });
-            }
-
-            // Use promisified bcrypt.compare instead of callback
-            const isMatch = await this._comparePasswordAsync(password, user.hashed_password);
-
-            if (!isMatch) {
-                console.warn('Incorrect password for user:', username);
-                return cb(null, false, { message: 'Incorrect password.' });
-            }
-
-            // Authentication successful
-            console.log('User authenticated successfully:', username);
-            return cb(null, {
-                id: user.id,
-                hashed_password: user.hashed_password,
-                created_at: user.created_at ? user.created_at.toISOString() : '',
-                is_admin: user.is_admin || false,
-            });
-        } catch (error) {
-            console.error('Error during user authentication:', error);
-            return cb(error);
+        // If user not found, return early
+        if (!user) {
+            console.warn('No user found with the provided username:', username);
+            cb(null, false, { message: 'Incorrect username.' });
+            return;
         }
+
+        // Use promisified bcrypt.compare instead of callback
+        const isMatch = await this._comparePasswordAsync(password, user.hashed_password);
+
+        if (!isMatch) {
+            console.warn('Incorrect password for user:', username);
+            cb(null, false, { message: 'Incorrect password.' });
+            return;
+        }
+
+        // Authentication successful
+        console.log('User authenticated successfully:', username);
+        cb(null, {
+            id: user.id,
+            hashed_password: user.hashed_password,
+            created_at: user.created_at ? user.created_at.toISOString() : '',
+            is_admin: user.is_admin || false,
+        });
     };
 
     // Helper method to promisify bcrypt.compare
