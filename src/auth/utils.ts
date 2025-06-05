@@ -32,41 +32,44 @@ export class AuthenticateUtil {
             const user = await this._prisma.users.findUnique({
                 where: { id: username },
             });
-            // Tbh I want to resolve error handling more earlier. Possible failure is only database connection or query issues.
-            // Are there any ways to reduce the length of this try-catch block?
 
-            // If user not found, return an error
+            // If user not found, return early
             if (!user) {
                 console.warn('No user found with the provided username:', username);
                 return cb(null, false, { message: 'Incorrect username.' });
             }
 
-            // Compare provided password with stored hashed password
-            bcrypt.compare(
-                password,
-                user.hashed_password,
-                (err: any, isMatch: boolean) => {
-                    if (err) {
-                        console.error('Error comparing passwords:', err);
-                        return cb(err);
-                    } else if (!isMatch) {
-                        console.warn('Incorrect password for user:', username);
-                        return cb(null, false, { message: 'Incorrect password.' });
-                    } else {
-                        return cb(null, {
-                            id: user.id,
-                            hashed_password: user.hashed_password,
-                            created_at: user.created_at ? user.created_at.toISOString() : '',
-                            is_admin: user.is_admin || false,
-                        });
-                    }
-                });
+            // Use promisified bcrypt.compare instead of callback
+            const isMatch = await this._comparePasswordAsync(password, user.hashed_password);
+
+            if (!isMatch) {
+                console.warn('Incorrect password for user:', username);
+                return cb(null, false, { message: 'Incorrect password.' });
+            }
+
+            // Authentication successful
+            console.log('User authenticated successfully:', username);
+            return cb(null, {
+                id: user.id,
+                hashed_password: user.hashed_password,
+                created_at: user.created_at ? user.created_at.toISOString() : '',
+                is_admin: user.is_admin || false,
+            });
         } catch (error) {
             console.error('Error during user authentication:', error);
             return cb(error);
         }
-        console.log('User authenticated successfully:', username);
     };
+
+    // Helper method to promisify bcrypt.compare
+    private async _comparePasswordAsync(password: string, hash: string): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, hash, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+    }
 
     userSerializer = (user: Express.User, cb: (error: any, id?: string) => void): void => {
         console.log('Serializing user:', user.id);
