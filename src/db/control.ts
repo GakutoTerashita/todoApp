@@ -9,6 +9,10 @@ class OperationResult {
     }
 }
 
+/**
+ * Represents a successful operation.  
+ * Contains a message and optional data.
+ */
 export class OperationSuccess<T = void> extends OperationResult {
     readonly data?: T;
 
@@ -16,12 +20,13 @@ export class OperationSuccess<T = void> extends OperationResult {
         super(message);
         this.data = data;
     }
-
-    hasData(): boolean {
-        return this.data !== undefined;
-    }
 }
 
+/**
+ * Represents a failure in an operation.  
+ * Contains an error message and an optional error object.  
+ * Provides a method to log the error with an optional prefix.
+ */
 export class OperationFailure extends OperationResult {
     readonly error?: Error;
 
@@ -37,6 +42,11 @@ export class OperationFailure extends OperationResult {
     }
 }
 
+/**
+ * Type alias for operation results.  
+ * **Success** or **Failure**.  
+ * T is the type of data returned in case of success, defaults to void.
+ */
 type DbOperationResult<T = void> = OperationSuccess<T> | OperationFailure;
 
 
