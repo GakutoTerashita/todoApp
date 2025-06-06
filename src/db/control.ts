@@ -157,9 +157,23 @@ export class TodoControl {
 
     completeTodoItem = async (itemId: string): Promise<OperationResult<void>> => {
         console.log('Completing todo item with ID:', itemId);
+        const itemToComplete = await this._prisma.todo_items.findUnique({
+            where: { id: itemId },
+            select: {
+                id: true,
+                name: true,
+                done: true,
+                due_date: true,
+                created_by: true,
+            },
+        });
+        if (!itemToComplete) {
+            return new OperationFailure(`Todo item with ID ${itemId} not found`, undefined);
+        }
+
         return await this._prisma.todo_items.update({
             where: { id: itemId },
-            data: { done: true },
+            data: { done: itemToComplete.done ? false : true },
         }).then((item) => {
             return new OperationSuccess(`Todo item with ID ${itemId} marked as done`, undefined);
         }).catch((error) => {

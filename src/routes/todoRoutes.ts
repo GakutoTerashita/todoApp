@@ -23,7 +23,7 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         return next();
     };
 
-    router.get('/', is_login, async (req, res) => {
+    const handler_get_root = async (req: express.Request, res: express.Response) => {
         const items = await fetchTodoItemsDoneNot(req.user!);
         const itemsDone = await fetchTodoItemsDone(req.user!);
 
@@ -46,13 +46,13 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
             success: req.flash('success'),
             error: req.flash('error'),
         });
-    });
+    };
 
-    router.get('/error', (req, res) => {
+    const handler_get_error = (req: express.Request, res: express.Response) => {
         res.send('error'); // TODO: Create an error page
-    });
+    };
 
-    router.post('/items/delete/:itemId', is_login, async (req, res) => {
+    const handler_post_delete_itemid = async (req: express.Request, res: express.Response) => {
         const itemId = req.params.itemId;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
@@ -69,9 +69,9 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         }
         req.flash('success', 'Removed item successfully');
         res.redirect('/');
-    });
+    }
 
-    router.post('/items/complete/:itemId', is_login, async (req, res) => {
+    const handler_post_complete_itemid = async (req: express.Request, res: express.Response) => {
         const itemId = req.params.itemId;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
@@ -89,9 +89,9 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         console.log('Item status changed successfully for item ID:', itemId);
         req.flash('success', 'Changed item status successfully');
         res.redirect('/');
-    });
+    }
 
-    router.post('/items/register', is_login, async (req, res) => {
+    const handler_post_register_itemid = async (req: express.Request, res: express.Response) => {
         const { name, dueDate } = req.body;
         if (!name) {
             req.flash('error', 'Item name is required');
@@ -115,16 +115,15 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         }
         req.flash('success', 'Item added successfully');
         res.redirect('/');
-    });
+    }
 
-    router.get('/items/modify/:itemId', is_login, async (req, res) => {
+    const handler_get_modify_itemid = async (req: express.Request, res: express.Response) => {
         const itemId = req.params.itemId;
         if (!itemId) {
             req.flash('error', 'Item ID is required');
             res.redirect('/');
             return;
         }
-
         const item = await fetchTodoItemById(itemId);
         if (item instanceof OperationFailure) {
             req.flash('error', 'Failed to fetch item for modification');
@@ -132,16 +131,15 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
             res.redirect('/');
             return;
         }
-
         if (item.data === null) {
             req.flash('error', 'Item not found');
             res.redirect('/');
             return;
         }
         res.render('modifyItems', { item: item.data });
-    });
+    };
 
-    router.post('/items/modify/:itemId', is_login, async (req, res) => {
+    const handler_post_modify_itemid = async (req: express.Request, res: express.Response) => {
         const itemId = req.params.itemId;
         const { name } = req.body;
 
@@ -163,7 +161,6 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
             res.redirect('/');
             return;
         }
-
         const resultUpdate = await updateTodoItemNameById(itemId, name);
         if (resultUpdate instanceof OperationFailure) {
             req.flash('error', 'Failed to update item name');
@@ -173,7 +170,15 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         }
         req.flash('success', 'Item modified successfully');
         res.redirect('/');
-    });
+    };
+
+    router.get('/', is_login, handler_get_root);
+    router.get('/error', handler_get_error);
+    router.post('/items/delete/:itemId', is_login, handler_post_delete_itemid);
+    router.post('/items/complete/:itemId', is_login, handler_post_complete_itemid);
+    router.post('/items/register', is_login, handler_post_register_itemid);
+    router.get('/items/modify/:itemId', is_login, handler_get_modify_itemid);
+    router.post('/items/modify/:itemId', is_login, handler_post_modify_itemid);
 
     return router;
 }
