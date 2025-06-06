@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { TodoListItem, TodoListItemWithUser } from './todoListItem';
 
+/**
+ * Base class for operation results.  
+ * Contains a message that describes the result of the operation.  
+ * This class is extended by both success and failure results.
+ */
 class OperationResult {
     readonly message: string;
 
