@@ -6,7 +6,7 @@ import { TodoListItem, TodoListItemWithUser } from './todoListItem';
  * Contains a message that describes the result of the operation.  
  * This class is extended by both success and failure results.
  */
-class OperationResult {
+class OperationResultBase {
     readonly message: string;
 
     constructor(message: string) {
@@ -18,7 +18,7 @@ class OperationResult {
  * Represents a successful operation.  
  * Contains a message and optional data.
  */
-export class OperationSuccess<T = void> extends OperationResult {
+export class OperationSuccess<T = void> extends OperationResultBase {
     readonly data?: T;
 
     constructor(message: string, data?: T) {
@@ -32,7 +32,7 @@ export class OperationSuccess<T = void> extends OperationResult {
  * Contains an error message and an optional error object.  
  * Provides a method to log the error with an optional prefix.
  */
-export class OperationFailure extends OperationResult {
+export class OperationFailure extends OperationResultBase {
     readonly error?: Error;
 
     constructor(message: string, error?: Error) {
@@ -52,150 +52,147 @@ export class OperationFailure extends OperationResult {
  * **Success** or **Failure**.  
  * T is the type of data returned in case of success, defaults to void.
  */
-type DbOperationResult<T = void> = OperationSuccess<T> | OperationFailure;
+type OperationResult<T = void> = OperationSuccess<T> | OperationFailure;
 
+export class TodoControl {
+    private _prisma: PrismaClient;
 
-export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<DbOperationResult<TodoListItem[]>> => {
-    console.log('Fetching todo items not done for user:', fetchedBy);
-    return await prisma.todo_items.findMany({
-        select: {
-            id: true,
-            name: true,
-            done: true,
-            due_date: true,
-            created_by: true,
-            users: {
-                select: { id: true },
-            },
-        },
-        where: {
-            users: fetchedBy.is_admin ? undefined : { id: fetchedBy.id },
-            done: false,
-        },
-        orderBy: [
-            { due_date: 'asc' },
-            { due_date: 'desc' },
-        ],
-    }).then((rows) => {
-        if (rows.length === 0) {
-            return new OperationSuccess('No todo items not done found', []);
-        }
-        return new OperationSuccess('Fetched todo items not done', rows);
-    }).catch((error) => {
-        return new OperationFailure('Failed to fetch todo items not done', error);
-    });
-};
-
-export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<DbOperationResult<TodoListItemWithUser[]>> => {
-    console.log('Fetching done todo items for user:', fetchedBy);
-    return await prisma.todo_items.findMany({
-        select: {
-            id: true,
-            name: true,
-            done: true,
-            due_date: true,
-            created_by: true,
-            users: {
-                select: { id: true },
-            },
-        },
-        where: {
-            users: fetchedBy.is_admin ? undefined : { id: fetchedBy.id },
-            done: true,
-        },
-        orderBy: [
-            { due_date: 'asc' },
-            { due_date: 'desc' },
-        ],
-    }).then((rows) => {
-        if (rows.length === 0) {
-            return new OperationSuccess('No done todo items found', []);
-        }
-        return new OperationSuccess('Fetched done todo items', rows);
-    }).catch((error) => {
-        return new OperationFailure('Failed to fetch done todo items', error);
-    });
-};
-
-export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): Promise<DbOperationResult<TodoListItem | null>> => {
-    return await prisma.todo_items.findUnique({
-        where: { id: itemId },
-        select: {
-            id: true,
-            name: true,
-            done: true,
-            due_date: true,
-            created_by: true,
-        },
-    }).then((row) => {
-        if (!row) {
-            return new OperationSuccess(`Todo item with ID ${itemId} not found`, null);
-        }
-        return new OperationSuccess(`Fetched todo item with ID ${itemId}`, row);
-    }).catch((error) => {
-        return new OperationFailure(`Failed to fetch todo item with ID ${itemId}`, error);
-    });
-};
-
-export const removeTodoItem = async (prisma: PrismaClient, itemId: string): Promise<DbOperationResult<void>> => {
-    return await prisma.todo_items.delete({
-        where: { id: itemId },
-    }).then(() => {
-        return new OperationSuccess(`Todo item with ID ${itemId} deleted successfully`, undefined);
-    }).catch((error) => {
-        return new OperationFailure(`Failed to delete todo item with ID ${itemId}`, error);
-    });
-};
-
-export const completeTodoItem = async (prisma: PrismaClient, itemId: string): Promise<DbOperationResult<void>> => {
-    const item = await prisma.todo_items.findUnique({
-        where: { id: itemId },
-        select: { done: true },
-    }).then((item) => {
-        return new OperationSuccess(`Fetched todo item with ID ${itemId}`, item);
-    }).catch((error) => {
-        return new OperationFailure(`Failed to fetch todo item with ID ${itemId}`, error);
-    });
-
-    if (item instanceof OperationFailure) {
-        return new OperationFailure(`Error fetching todo item with ID ${itemId}`, item.error);
+    constructor(prisma: PrismaClient) {
+        this._prisma = prisma;
     }
 
-    if (!item.data) {
-        return new OperationFailure(`Todo item with ID ${itemId} not found`, new Error('Item not found'));
+    fetchTodoItemsDoneNot = async (fetchedBy: Express.User): Promise<OperationResult<TodoListItem[]>> => {
+        console.log('Fetching todo items not done for user:', fetchedBy);
+        return await this._prisma.todo_items.findMany({
+            select: {
+                id: true,
+                name: true,
+                done: true,
+                due_date: true,
+                created_by: true,
+                users: {
+                    select: { id: true },
+                },
+            },
+            where: {
+                users: fetchedBy.is_admin ? undefined : { id: fetchedBy.id },
+                done: false,
+            },
+            orderBy: [
+                { due_date: 'asc' },
+                { due_date: 'desc' },
+            ],
+        }).then((rows) => {
+            if (rows.length === 0) {
+                return new OperationSuccess('No todo items not done found', []);
+            }
+            return new OperationSuccess('Fetched todo items not done', rows);
+        }).catch((error) => {
+            return new OperationFailure('Failed to fetch todo items not done', error);
+        });
     }
 
-    return await prisma.todo_items.update({
-        where: { id: itemId },
-        data: { done: !item.data.done },
-    }).then((item) => {
-        return new OperationSuccess(`Todo item with ID ${itemId} -> ${item.id} marked as ${!item.done ? 'done' : 'not done'}`, undefined);
-    }).catch((error) => {
-        return new OperationFailure(`Failed to update todo item with ID ${itemId}`, error);
-    });
-};
+    fetchTodoItemsDone = async (fetchedBy: Express.User): Promise<OperationResult<TodoListItemWithUser[]>> => {
+        console.log('Fetching done todo items for user:', fetchedBy);
+        return await this._prisma.todo_items.findMany({
+            select: {
+                id: true,
+                name: true,
+                done: true,
+                due_date: true,
+                created_by: true,
+                users: {
+                    select: { id: true },
+                },
+            },
+            where: {
+                users: fetchedBy.is_admin ? undefined : { id: fetchedBy.id },
+                done: true,
+            },
+            orderBy: [
+                { due_date: 'asc' },
+                { due_date: 'desc' },
+            ],
+        }).then((rows) => {
+            if (rows.length === 0) {
+                return new OperationSuccess('No done todo items found', []);
+            }
+            return new OperationSuccess('Fetched done todo items', rows);
+        }).catch((error) => {
+            return new OperationFailure('Failed to fetch done todo items', error);
+        });
+    }
 
-export const registerTodoItem = async (prisma: PrismaClient, item: TodoListItem): Promise<DbOperationResult<void>> => {
-    return await prisma.todo_items.create({
-        data: {
-            id: item.id,
-            name: item.name,
-            done: item.done,
-            due_date: item.due_date ? new Date(item.due_date) : null,
-            created_by: item.created_by,
-        },
-    }).then((createdItem) => {
-        return new OperationSuccess(`Todo item with name ${createdItem.name} created successfully`, undefined);
-    }).catch((error) => {
-        return new OperationFailure(`Failed to create todo item with name ${item.name}`, error);
-    });
-};
+    fetchTodoItemById = async (itemId: string): Promise<OperationResult<TodoListItem | null>> => {
+        console.log('Fetching todo item by ID:', itemId);
+        return await this._prisma.todo_items.findUnique({
+            where: { id: itemId },
+            select: {
+                id: true,
+                name: true,
+                done: true,
+                due_date: true,
+                created_by: true,
+            },
+        }).then((row) => {
+            if (!row) {
+                return new OperationSuccess(`Todo item with ID ${itemId} not found`, null);
+            }
+            return new OperationSuccess(`Fetched todo item with ID ${itemId}`, row);
+        }).catch((error) => {
+            return new OperationFailure(`Failed to fetch todo item with ID ${itemId}`, error);
+        });
+    }
 
-export const updateTodoItemNameById = async (prisma: PrismaClient, itemId: string, name: string): Promise<DbOperationResult<void>> => {
-    return await prisma.todo_items.update({
-        where: { id: itemId },
-        data: { name },
-    })
-        .then(() => new OperationSuccess(`Updated todo item name for ID ${itemId}`, undefined))
-        .catch((error) => new OperationFailure(`Failed to update todo item name for ID ${itemId}`, error));
-};
+    removeTodoItem = async (itemId: string): Promise<OperationResult<void>> => {
+        console.log('Removing todo item with ID:', itemId);
+        return await this._prisma.todo_items.delete({
+            where: { id: itemId },
+        }).then(() => {
+            return new OperationSuccess(`Todo item with ID ${itemId} deleted successfully`, undefined);
+        }).catch((error) => {
+            return new OperationFailure(`Failed to delete todo item with ID ${itemId}`, error);
+        });
+    }
+
+    completeTodoItem = async (itemId: string): Promise<OperationResult<void>> => {
+        console.log('Completing todo item with ID:', itemId);
+        return await this._prisma.todo_items.update({
+            where: { id: itemId },
+            data: { done: true },
+        }).then((item) => {
+            return new OperationSuccess(`Todo item with ID ${itemId} marked as done`, undefined);
+        }).catch((error) => {
+            return new OperationFailure(`Failed to complete todo item with ID ${itemId}`, error);
+        });
+    }
+
+    registerTodoItem = async (item: TodoListItem): Promise<OperationResult<void>> => {
+        console.log('Registering new todo item:', item);
+        return await this._prisma.todo_items.create({
+            data: {
+                id: item.id,
+                name: item.name,
+                done: item.done,
+                due_date: item.due_date ? new Date(item.due_date) : null,
+                created_by: item.created_by,
+            },
+        }).then((createdItem) => {
+            return new OperationSuccess(`Todo item with name ${createdItem.name} created successfully`, undefined);
+        }).catch((error) => {
+            return new OperationFailure(`Failed to create todo item with name ${item.name}`, error);
+        });
+    }
+
+    updateTodoItemNameById = async (itemId: string, name: string): Promise<OperationResult<void>> => {
+        console.log('Updating todo item name for ID:', itemId, 'to:', name);
+        return await this._prisma.todo_items.update({
+            where: { id: itemId },
+            data: { name },
+        }).then(() => {
+            return new OperationSuccess(`Updated todo item name for ID ${itemId}`, undefined);
+        }).catch((error) => {
+            return new OperationFailure(`Failed to update todo item name for ID ${itemId}`, error);
+        });
+    }
+}
