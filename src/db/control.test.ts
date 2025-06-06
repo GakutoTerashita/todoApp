@@ -80,30 +80,69 @@ describe('class TodoControl', () => {
 
     describe('fetchTodoItemsDoneNot', () => {
 
-        it('success case', async () => {
-            const fetchedBy: Express.User = {
-                id: 'Test User',
-                hashed_password: 'hashed',
-                created_at: new Date().toISOString(),
-                is_admin: false
-            };
-            const findManyReturns: TodoListItem[] = [{
-                id: '1',
-                name: 'Test Item',
-                done: false,
-                due_date: new Date(),
-                created_by: 'hoge',
-            }];
-            prismaMock.todo_items.findMany.mockResolvedValue(findManyReturns);
+        describe('success case', () => {
 
-            const result = await todoControl.fetchTodoItemsDoneNot(fetchedBy);
+            it('single item', async () => {
+                const fetchedBy: Express.User = {
+                    id: 'Test User',
+                    hashed_password: 'hashed',
+                    created_at: new Date().toISOString(),
+                    is_admin: false
+                };
+                const findManyReturns: TodoListItem[] = [{
+                    id: '1',
+                    name: 'Test Item',
+                    done: false,
+                    due_date: new Date(),
+                    created_by: 'hoge',
+                }];
+                prismaMock.todo_items.findMany.mockResolvedValue(findManyReturns);
 
-            expect(result).toBeInstanceOf(OperationSuccess);
-            // Because class OperationResult<T> is un-exported alias of OperationSuccess<T> | OperationFailure,
-            // you need to manually assert the type in tests to tell TypeScript that the result is a success or failure.
-            assertSuccess(result);
-            expect(result.message).toBe('Fetched todo items not done for user: Test User');
-            expect(result.data).toEqual(findManyReturns);
+                const result = await todoControl.fetchTodoItemsDoneNot(fetchedBy);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                // Because class OperationResult<T> is un-exported alias of OperationSuccess<T> | OperationFailure,
+                // you need to manually assert the type in tests to tell TypeScript that the result is a success or failure.
+                assertSuccess(result);
+                expect(result.message).toBe('Fetched todo items not done for user: Test User');
+                expect(result.data).toEqual(findManyReturns);
+            });
+            it('multiple items', async () => {
+                const fetchedBy: Express.User = {
+                    id: 'Test User',
+                    hashed_password: 'hashed',
+                    created_at: new Date().toISOString(),
+                    is_admin: false
+                };
+                const findManyReturns: TodoListItem[] = [
+                    { id: '1', name: 'Test Item 1', done: false, due_date: new Date(), created_by: 'hoge' },
+                    { id: '2', name: 'Test Item 2', done: false, due_date: new Date(), created_by: 'hoge' }
+                ];
+                prismaMock.todo_items.findMany.mockResolvedValue(findManyReturns);
+
+                const result = await todoControl.fetchTodoItemsDoneNot(fetchedBy);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe('Fetched todo items not done for user: Test User');
+                expect(result.data).toEqual(findManyReturns);
+            });
+            it('no items', async () => {
+                const fetchedBy: Express.User = {
+                    id: 'Test User',
+                    hashed_password: 'hashed',
+                    created_at: new Date().toISOString(),
+                    is_admin: false
+                };
+                prismaMock.todo_items.findMany.mockResolvedValue([]);
+
+                const result = await todoControl.fetchTodoItemsDoneNot(fetchedBy);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe('No todo items not done found for user: Test User');
+                expect(result.data).toEqual([]);
+            });
         });
 
         it('failure case', async () => {

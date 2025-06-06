@@ -84,7 +84,7 @@ export class TodoControl {
             ],
         }).then((rows) => {
             if (rows.length === 0) {
-                return new OperationSuccess('No todo items not done found', []);
+                return new OperationSuccess(`No todo items not done found for user: ${fetchedBy.id}`, []);
             }
             return new OperationSuccess(`Fetched todo items not done for user: ${fetchedBy.id}`, rows);
         }).catch((error) => {
@@ -115,7 +115,7 @@ export class TodoControl {
             ],
         }).then((rows) => {
             if (rows.length === 0) {
-                return new OperationSuccess('No done todo items found', []);
+                return new OperationSuccess(`No done todo items found for user: ${fetchedBy.id}`, []);
             }
             return new OperationSuccess(`Fetched done todo items for user: ${fetchedBy.id}`, rows);
         }).catch((error) => {
