@@ -55,13 +55,12 @@ export const authRoutes = (prisma: PrismaClient): Router => {
         const is_admin = is_admin_raw === 'true';
 
         // Try to create a new user
-        const userOrError = await authUtils.createUser(username, password, is_admin);
+        const userMaybe = await authUtils.createUser(username, password, is_admin).catch((err) => {
+            console.error('Error creating user:', err);
+        });
 
-        // Check if an error occurred during user creation
-        if (userOrError instanceof Error) {
-            console.error('Error creating user:', userOrError);
-            req.flash('error', userOrError.message);
-            // If an error occurred, redirect to the auth page with an error message
+        if (!userMaybe) {
+            req.flash('error', 'An error occurred while creating the user. Please try again.');
             return res.redirect('/auth');
         }
 

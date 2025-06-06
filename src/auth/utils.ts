@@ -81,33 +81,31 @@ export class AuthenticateUtil {
         cb: (error: any, user?: Express.User | null) => void
     ): Promise<void> => {
         console.log('Deserializing user with ID:', id);
-        try {
-            const user = await this._prisma.users.findUnique({
-                where: { id },
-            });
-
-            if (!user) {
-                console.warn('User not found during deserialization:', id);
-                return cb(null, null);
-            }
-
-            cb(null, {
-                id: user.id,
-                hashed_password: user.hashed_password,
-                created_at: user.created_at ? user.created_at.toISOString() : '',
-                is_admin: user.is_admin || false,
-            });
-        } catch (error) {
-            console.error('Error during user deserialization:', error);
+        const user = await this._prisma.users.findUnique({
+            where: { id },
+        }).catch((error) => {
+            console.error
             cb(error);
+        })
+
+        if (!user) {
+            console.warn('User not found during deserialization:', id);
+            return cb(null, null);
         }
+
+        cb(null, {
+            id: user.id,
+            hashed_password: user.hashed_password,
+            created_at: user.created_at ? user.created_at.toISOString() : '',
+            is_admin: user.is_admin || false,
+        });
     };
 
     createUser = async (
         username: string,
         password: string,
         is_admin: boolean,
-    ): Promise<Express.User | Error> => {
+    ): Promise<Express.User> => {
         console.log('Creating user:', username, 'is_admin:', is_admin);
         // Test returing Error
         // if (username === 'test' && password === 'test') {
@@ -116,28 +114,27 @@ export class AuthenticateUtil {
 
         if (!username || !password) {
             console.error('Username and password are required for user creation.');
-            return new Error('Username and password are required.');
+            throw new Error('Username and password are required.');
         }
 
-        try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const user = await this._prisma.users.create({
-                data: {
-                    id: username,
-                    hashed_password: hashedPassword,
-                    is_admin: is_admin || false,
-                },
-            });
-            console.log('User created successfully:', user.id);
-            return {
-                id: user.id,
-                hashed_password: user.hashed_password,
-                created_at: user.created_at ? user.created_at.toISOString() : '',
-                is_admin: user.is_admin || false,
-            };
-        } catch (error) {
-            console.error('Error creating user:', error);
-            return new Error('An error occurred during user creation.');
-        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await this._prisma.users.create({
+            data: {
+                id: username,
+                hashed_password: hashedPassword,
+                is_admin: is_admin || false,
+            },
+        }).catch((error) => {
+            console.error('Error creating user in database:', error);
+            throw new Error('Database error during user creation.');
+        });
+
+        console.log('User created successfully:', user.id);
+        return {
+            id: user.id,
+            hashed_password: user.hashed_password,
+            created_at: user.created_at ? user.created_at.toISOString() : '',
+            is_admin: user.is_admin || false,
+        };
     }
 }
