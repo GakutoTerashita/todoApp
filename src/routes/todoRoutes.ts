@@ -15,20 +15,23 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
     };
 
     router.get('/', is_login, async (req, res) => {
-        try {
-            const items = await fetchTodoItemsDoneNot(prisma, req.user!)
-            const itemsDone = await fetchTodoItemsDone(prisma, req.user!);
-            res.render('home', {
-                items,
-                itemsDone,
-                success: req.flash('success'),
-                error: req.flash('error'),
-            });
-        } catch (error) {
-            console.error('Error fetching todo items:', error);
-            // req.flash('error', 'Failed to fetch todo items');
+        const items = await fetchTodoItemsDoneNot(prisma, req.user!);
+        const itemsDone = await fetchTodoItemsDone(prisma, req.user!);
+
+        if (items.error || itemsDone.error) {
+            console.error('Error fetching todo items:', items.error || itemsDone.error);
+            items.logError();
+            itemsDone.logError();
             res.redirect('/error'); // TODO: Create an database fetch error page
+            return;
         }
+
+        res.render('home', {
+            items: items.data,
+            itemsDone: itemsDone.data,
+            success: req.flash('success'),
+            error: req.flash('error'),
+        });
     });
 
     router.get('/error', (req, res) => {

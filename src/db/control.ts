@@ -1,8 +1,41 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { TodoListItem, TodoListItemWithUser } from './todoListItem';
 
-export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<TodoListItemWithUser[]> => {
-    const rows = await prisma.todo_items.findMany({
+export class OperationResult<T = void> {
+    readonly success: boolean;
+    readonly message: string;
+    readonly data?: T;
+    readonly error?: Error;
+
+    private constructor(success: boolean, message: string, data?: T, error?: Error) {
+        this.success = success;
+        this.message = message;
+        this.data = data;
+        this.error = error;
+    }
+
+    static success<T>(message: string, data?: T): OperationResult<T> {
+        return new OperationResult<T>(true, message, data);
+    }
+
+    static failure<T>(message: string, error?: Error): OperationResult<T> {
+        return new OperationResult<T>(false, message, undefined, error);
+    }
+
+    hasData(): boolean {
+        return this.data !== undefined;
+    }
+
+    logError(prefix: string = ''): void {
+        if (!this.success && this.error) {
+            console.error(`${prefix}${this.message}`, this.error);
+        }
+    }
+}
+
+export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<OperationResult<TodoListItem[]>> => {
+    console.log('Fetching todo items not done for user:', fetchedBy);
+    return await prisma.todo_items.findMany({
         select: {
             id: true,
             name: true,
@@ -21,21 +54,19 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Exp
             { due_date: 'asc' },
             { due_date: 'desc' },
         ],
+    }).then((rows) => {
+        if (rows.length === 0) {
+            return OperationResult.success('No todo items not done found', []);
+        }
+        return OperationResult.success('Fetched todo items not done', rows);
+    }).catch((error) => {
+        return OperationResult.failure('Failed to fetch todo items not done', error);
     });
-
-    return rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        done: row.done || false,
-        due_date: row.due_date,
-        created_by: row.created_by,
-        users: row.users,
-    }));
 };
 
-export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<TodoListItemWithUser[]> => {
+export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<OperationResult<TodoListItemWithUser[]>> => {
     console.log('Fetching done todo items for user:', fetchedBy);
-    const rows = await prisma.todo_items.findMany({
+    return await prisma.todo_items.findMany({
         select: {
             id: true,
             name: true,
@@ -54,16 +85,14 @@ export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Expres
             { due_date: 'asc' },
             { due_date: 'desc' },
         ],
+    }).then((rows) => {
+        if (rows.length === 0) {
+            return OperationResult.success('No done todo items found', []);
+        }
+        return OperationResult.success('Fetched done todo items', rows);
+    }).catch((error) => {
+        return OperationResult.failure('Failed to fetch done todo items', error);
     });
-
-    return rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        done: row.done || false,
-        due_date: row.due_date,
-        created_by: row.created_by,
-        users: row.users,
-    }));
 };
 
 export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): Promise<TodoListItem | null> => {
