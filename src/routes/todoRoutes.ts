@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
 import { TodoListItem } from '../db/todoListItem';
 import { v4 as uuidV4 } from 'uuid';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { completeTodoItem, fetchTodoItemById, fetchTodoItemsDone, fetchTodoItemsDoneNot, registerTodoItem, removeTodoItem, updateTodoItemNameById } from '../db/control';
 
 export const todoRoutes = (prisma: PrismaClient): Router => {
