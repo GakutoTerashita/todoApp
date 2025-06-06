@@ -13,11 +13,3 @@ const todoItemsWithUsers = Prisma.validator<Prisma.todo_itemsDefaultArgs>()({
 
 export type TodoListItem = Prisma.todo_itemsGetPayload<typeof todoItems>;
 export type TodoListItemWithUser = Prisma.todo_itemsGetPayload<typeof todoItemsWithUsers>;
-
-const hoge = (): Prisma.usersSelect => {
-    return {
-        id: true,
-        hashed_password: false,
-        created_at: false,
-    };
-}
