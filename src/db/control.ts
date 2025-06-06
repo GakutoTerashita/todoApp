@@ -95,8 +95,8 @@ export const fetchTodoItemsDone = async (prisma: PrismaClient, fetchedBy: Expres
     });
 };
 
-export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): Promise<TodoListItem | null> => {
-    const row = await prisma.todo_items.findUnique({
+export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): Promise<OperationResult<TodoListItem | null>> => {
+    return await prisma.todo_items.findUnique({
         where: { id: itemId },
         select: {
             id: true,
@@ -105,19 +105,14 @@ export const fetchTodoItemById = async (prisma: PrismaClient, itemId: string): P
             due_date: true,
             created_by: true,
         },
+    }).then((row) => {
+        if (!row) {
+            return OperationResult.success(`Todo item with ID ${itemId} not found`, null);
+        }
+        return OperationResult.success(`Fetched todo item with ID ${itemId}`, row);
+    }).catch((error) => {
+        return OperationResult.failure(`Failed to fetch todo item with ID ${itemId}`, error);
     });
-
-    if (!row) {
-        return null;
-    }
-
-    return {
-        id: row.id,
-        name: row.name,
-        done: row.done || false,
-        due_date: row.due_date,
-        created_by: row.created_by,
-    };
 };
 
 export const removeTodoItem = async (prisma: PrismaClient, itemId: string): Promise<void> => {
@@ -154,9 +149,16 @@ export const registerTodoItem = async (prisma: PrismaClient, item: TodoListItem)
     });
 };
 
-export const updateTodoItemNameById = async (prisma: PrismaClient, itemId: string, name: string): Promise<void> => {
-    await prisma.todo_items.update({
+export const updateTodoItemNameById = async (prisma: PrismaClient, itemId: string, name: string): Promise<OperationResult<void>> => {
+    const error = await prisma.todo_items.update({
         where: { id: itemId },
         data: { name },
+    }).catch((error) => {
+        return error;
     });
+
+    if (error) {
+        return OperationResult.failure(`Failed to update todo item name for ID ${itemId}`, error);
+    }
+    return OperationResult.success(`Updated todo item name for ID ${itemId}`);
 };
