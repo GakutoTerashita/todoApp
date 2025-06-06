@@ -86,9 +86,9 @@ export class TodoControl {
             if (rows.length === 0) {
                 return new OperationSuccess('No todo items not done found', []);
             }
-            return new OperationSuccess('Fetched todo items not done', rows);
+            return new OperationSuccess(`Fetched todo items not done for user: ${fetchedBy.id}`, rows);
         }).catch((error) => {
-            return new OperationFailure('Failed to fetch todo items not done', error);
+            return new OperationFailure(`Failed to fetch todo items not done for user: ${fetchedBy.id}`, error);
         });
     }
 
@@ -117,9 +117,9 @@ export class TodoControl {
             if (rows.length === 0) {
                 return new OperationSuccess('No done todo items found', []);
             }
-            return new OperationSuccess('Fetched done todo items', rows);
+            return new OperationSuccess(`Fetched done todo items for user: ${fetchedBy.id}`, rows);
         }).catch((error) => {
-            return new OperationFailure('Failed to fetch done todo items', error);
+            return new OperationFailure(`Failed to fetch done todo items for user: ${fetchedBy.id}`, error);
         });
     }
 

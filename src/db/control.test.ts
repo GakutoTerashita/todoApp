@@ -1,4 +1,8 @@
 import { OperationFailure, OperationSuccess } from './control';
+import { TodoControl } from './control';
+import { prismaMock } from '../../singleton';
+import { TodoListItem } from './todoListItem';
+import '../auth/utils';
 
 describe('class OperationFailure', () => {
     it('constructor with error', () => {
@@ -39,5 +43,86 @@ describe('class OperationSuccess', () => {
 
         expect(success.message).toBe('Test success');
         expect(success.data).toBeUndefined();
+    });
+});
+
+// Because class OperationResult<T> is un-exported alias of OperationSuccess<T> | OperationFailure,
+// you need to manually assert the type in tests to tell TypeScript that the result is a success or failure.
+
+/** 
+* @param result The operation result to assert.
+* Asserts that the result is a success.  
+* Throws an error if the result is not a success.
+*/
+function assertSuccess<T>(result: OperationSuccess<T> | OperationFailure): asserts result is OperationSuccess<T> {
+    if (!(result instanceof OperationSuccess)) {
+        throw new Error(`Expected success but got ${result.constructor.name}: ${result.message}`);
+    }
+}
+
+/**
+ * @param result The operation result to assert.
+ * Asserts that the result is a failure.
+ * Throws an error if the result is not a failure.
+ */
+function assertFailure(result: OperationSuccess<any> | OperationFailure): asserts result is OperationFailure {
+    if (!(result instanceof OperationFailure)) {
+        throw new Error(`Expected failure but got ${result.constructor.name}: ${result.message}`);
+    }
+}
+
+describe('class TodoControl', () => {
+    let todoControl: TodoControl;
+
+    beforeEach(() => {
+        todoControl = new TodoControl(prismaMock);
+    });
+
+    describe('fetchTodoItemsDoneNot', () => {
+
+        it('success case', async () => {
+            const fetchedBy: Express.User = {
+                id: 'Test User',
+                hashed_password: 'hashed',
+                created_at: new Date().toISOString(),
+                is_admin: false
+            };
+            const findManyReturns: TodoListItem[] = [{
+                id: '1',
+                name: 'Test Item',
+                done: false,
+                due_date: new Date(),
+                created_by: 'hoge',
+            }];
+            prismaMock.todo_items.findMany.mockResolvedValue(findManyReturns);
+
+            const result = await todoControl.fetchTodoItemsDoneNot(fetchedBy);
+
+            expect(result).toBeInstanceOf(OperationSuccess);
+            // Because class OperationResult<T> is un-exported alias of OperationSuccess<T> | OperationFailure,
+            // you need to manually assert the type in tests to tell TypeScript that the result is a success or failure.
+            assertSuccess(result);
+            expect(result.message).toBe('Fetched todo items not done for user: Test User');
+            expect(result.data).toEqual(findManyReturns);
+        });
+
+        it('failure case', async () => {
+            const fetchedBy: Express.User = {
+                id: 'Test User',
+                hashed_password: 'hashed',
+                created_at: new Date().toISOString(),
+                is_admin: false
+            };
+            const error = new Error('Database error');
+            prismaMock.todo_items.findMany.mockRejectedValue(error);
+
+            const result = await todoControl.fetchTodoItemsDoneNot(fetchedBy);
+
+            expect(result).toBeInstanceOf(OperationFailure);
+            assertFailure(result);
+            expect(result.message).toBe('Failed to fetch todo items not done for user: Test User');
+            expect(result.error).toBe(error);
+        });
+
     });
 });
