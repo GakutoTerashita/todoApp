@@ -2,7 +2,7 @@ import express, { Router } from 'express';
 import { TodoListItem } from '../db/todoListItem';
 import { v4 as uuidV4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
-import { completeTodoItem, fetchTodoItemById, fetchTodoItemsDone, fetchTodoItemsDoneNot, registerTodoItem, removeTodoItem, updateTodoItemNameById } from '../db/control';
+import { completeTodoItem, fetchTodoItemById, fetchTodoItemsDone, fetchTodoItemsDoneNot, OperationFailure, registerTodoItem, removeTodoItem, updateTodoItemNameById } from '../db/control';
 
 export const todoRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
@@ -18,9 +18,14 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         const items = await fetchTodoItemsDoneNot(prisma, req.user!);
         const itemsDone = await fetchTodoItemsDone(prisma, req.user!);
 
-        if (items.error || itemsDone.error) {
-            console.error('Error fetching todo items:', items.error || itemsDone.error);
+        if (items instanceof OperationFailure) {
+            console.error('Error fetching todo items');
             items.logError();
+            res.redirect('/error'); // TODO: Create an database fetch error page
+            return;
+        }
+        if (itemsDone instanceof OperationFailure) {
+            console.error('Error fetching done todo items');
             itemsDone.logError();
             res.redirect('/error'); // TODO: Create an database fetch error page
             return;
@@ -39,22 +44,22 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
     });
 
     router.post('/items/delete/:itemId', is_login, async (req, res) => {
-        try {
-            const itemId = req.params.itemId;
-            if (!itemId) {
-                req.flash('error', 'Item ID is required');
-                res.redirect('/');
-                return;
-            }
-
-            await removeTodoItem(prisma, itemId)
-            req.flash('success', 'Removed item successfully');
+        const itemId = req.params.itemId;
+        if (!itemId) {
+            req.flash('error', 'Item ID is required');
             res.redirect('/');
-        } catch (error) {
-            req.flash('error', 'Failed to remove item');
-            console.error('Error removing item:', error);
-            res.redirect('/');
+            return;
         }
+
+        const result = await removeTodoItem(prisma, itemId)
+        if (result instanceof OperationFailure) {
+            console.error('Error removing item:', result.error);
+            req.flash('error', 'Failed to remove item');
+            res.redirect('/');
+            return;
+        }
+        req.flash('success', 'Removed item successfully');
+        res.redirect('/');
     });
 
     router.post('/items/complete/:itemId', is_login, async (req, res) => {
@@ -65,43 +70,42 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
             return;
         }
 
-        try {
-            await completeTodoItem(prisma, itemId);
-            console.log('Item status changed successfully for item ID:', itemId);
-            req.flash('success', 'Changed item status successfully');
-            res.redirect('/');
-        } catch (error) {
-            console.error('Error changing item status:', error);
+        const result = await completeTodoItem(prisma, itemId);
+        if (result instanceof OperationFailure) {
+            console.error('Error changing item status:', result.error);
             req.flash('error', 'Failed to change item status');
             res.redirect('/');
+            return;
         }
-
+        console.log('Item status changed successfully for item ID:', itemId);
+        req.flash('success', 'Changed item status successfully');
+        res.redirect('/');
     });
 
     router.post('/items/register', is_login, async (req, res) => {
-        try {
-            const { name, dueDate } = req.body;
-            if (!name) {
-                req.flash('error', 'Item name is required');
-                res.redirect('/');
-                return;
-            }
-
-            const newItem: TodoListItem = {
-                id: uuidV4(),
-                name,
-                done: false,
-                due_date: dueDate || undefined,
-                created_by: req.user!.id,
-            }
-            await registerTodoItem(prisma, newItem);
-            req.flash('success', 'Item added successfully');
+        const { name, dueDate } = req.body;
+        if (!name) {
+            req.flash('error', 'Item name is required');
             res.redirect('/');
-        } catch (error) {
-            req.flash('error', 'Failed to add item');
-            console.error('Error adding item:', error);
-            res.redirect('/');
+            return;
         }
+
+        const newItem: TodoListItem = {
+            id: uuidV4(),
+            name,
+            done: false,
+            due_date: dueDate || undefined,
+            created_by: req.user!.id,
+        }
+        const result = await registerTodoItem(prisma, newItem);
+        if (result instanceof OperationFailure) {
+            console.error('Error registering item:', result.error);
+            req.flash('error', 'Failed to add item');
+            res.redirect('/');
+            return;
+        }
+        req.flash('success', 'Item added successfully');
+        res.redirect('/');
     });
 
     router.get('/items/modify/:itemId', is_login, async (req, res) => {
@@ -113,14 +117,15 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         }
 
         const item = await fetchTodoItemById(prisma, itemId);
-        if (item.data === null) {
-            req.flash('error', 'Item not found');
+        if (item instanceof OperationFailure) {
+            req.flash('error', 'Failed to fetch item for modification');
+            item.logError();
             res.redirect('/');
             return;
         }
-        if (item.error) {
-            req.flash('error', 'Failed to fetch item for modification');
-            item.logError();
+
+        if (item.data === null) {
+            req.flash('error', 'Item not found');
             res.redirect('/');
             return;
         }
@@ -137,27 +142,26 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
             return;
         }
 
-        const item = await fetchTodoItemById(prisma, itemId);
-        if (item.data === null) {
+        const resultFetch = await fetchTodoItemById(prisma, itemId);
+        if (resultFetch instanceof OperationFailure) {
+            req.flash('error', 'Failed to fetch item for modification');
+            resultFetch.logError();
+            res.redirect('/');
+            return;
+        }
+        if (resultFetch.data === null) {
             req.flash('error', 'Item not found');
             res.redirect('/');
             return;
         }
-        if (item.error) {
-            req.flash('error', 'Failed to fetch item for modification');
-            item.logError();
+
+        const resultUpdate = await updateTodoItemNameById(prisma, itemId, name);
+        if (resultUpdate instanceof OperationFailure) {
+            req.flash('error', 'Failed to update item name');
+            resultUpdate.logError();
             res.redirect('/');
             return;
         }
-
-        const result = await updateTodoItemNameById(prisma, itemId, name);
-        if (result.error) {
-            req.flash('error', 'Failed to modify item');
-            result.logError();
-            res.redirect('/');
-            return;
-        }
-
         req.flash('success', 'Item modified successfully');
         res.redirect('/');
     });
