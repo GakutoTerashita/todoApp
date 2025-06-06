@@ -16,8 +16,7 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
 
     router.get('/', is_login, async (req, res) => {
         try {
-            type TodoListItemWithUser = Awaited<ReturnType<typeof fetchTodoItemsDoneNot>>;
-            const items: TodoListItemWithUser = await fetchTodoItemsDoneNot(prisma, req.user!)
+            const items = await fetchTodoItemsDoneNot(prisma, req.user!)
             const itemsDone = await fetchTodoItemsDone(prisma, req.user!);
             res.render('home', {
                 items,

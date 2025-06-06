@@ -1,13 +1,14 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { TodoListItem, TodoListItemWithUser } from './todoListItem';
 
-export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Express.User) => {
+export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Express.User): Promise<TodoListItemWithUser[]> => {
     const rows = await prisma.todo_items.findMany({
         select: {
             id: true,
             name: true,
             done: true,
             due_date: true,
+            created_by: true,
             users: {
                 select: { id: true },
             },
@@ -27,6 +28,7 @@ export const fetchTodoItemsDoneNot = async (prisma: PrismaClient, fetchedBy: Exp
         name: row.name,
         done: row.done || false,
         due_date: row.due_date,
+        created_by: row.created_by,
         users: row.users,
     }));
 };
