@@ -245,4 +245,52 @@ describe('class TodoControl', () => {
             });
         });
     });
+
+    describe('fetchTodoItemById', () => {
+        it('failure case', async () => {
+            const itemId = '1';
+            const error = new Error('Database error');
+            prismaMock.todo_items.findUnique.mockRejectedValue(error);
+
+            const result = await todoControl.fetchTodoItemById(itemId);
+
+            expect(result).toBeInstanceOf(OperationFailure);
+            assertFailure(result);
+            expect(result.message).toBe(`Failed to fetch todo item by ID: ${itemId}`);
+            expect(result.error).toBe(error);
+        });
+
+        describe('success case', () => {
+            it('item found', async () => {
+                const itemId = '1';
+                const findUniqueReturns: TodoListItem | null = {
+                    id: itemId,
+                    name: 'Test Item',
+                    done: false,
+                    due_date: new Date(),
+                    created_by: 'hoge',
+                };
+                prismaMock.todo_items.findUnique.mockResolvedValue(findUniqueReturns);
+
+                const result = await todoControl.fetchTodoItemById(itemId);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe(`Fetched todo item by ID: ${itemId}`);
+                expect(result.data).toEqual(findUniqueReturns);
+            });
+
+            it('item not found', async () => {
+                const itemId = '1';
+                prismaMock.todo_items.findUnique.mockResolvedValue(null);
+
+                const result = await todoControl.fetchTodoItemById(itemId);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe(`No todo item found by ID: ${itemId}`);
+                expect(result.data).toBeNull();
+            });
+        });
+    });
 });

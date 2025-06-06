@@ -136,11 +136,11 @@ export class TodoControl {
             },
         }).then((row) => {
             if (!row) {
-                return new OperationSuccess(`Todo item with ID ${itemId} not found`, null);
+                return new OperationSuccess(`No todo item found by ID: ${itemId}`, null);
             }
-            return new OperationSuccess(`Fetched todo item by ID ${itemId}`, row);
+            return new OperationSuccess(`Fetched todo item by ID: ${itemId}`, row);
         }).catch((error) => {
-            return new OperationFailure(`Failed to fetch todo by ID ${itemId}`, error);
+            return new OperationFailure(`Failed to fetch todo item by ID: ${itemId}`, error);
         });
     }
 
