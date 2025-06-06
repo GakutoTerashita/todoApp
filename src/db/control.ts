@@ -138,20 +138,20 @@ export class TodoControl {
             if (!row) {
                 return new OperationSuccess(`Todo item with ID ${itemId} not found`, null);
             }
-            return new OperationSuccess(`Fetched todo item with ID ${itemId}`, row);
+            return new OperationSuccess(`Fetched todo item by ID ${itemId}`, row);
         }).catch((error) => {
-            return new OperationFailure(`Failed to fetch todo item with ID ${itemId}`, error);
+            return new OperationFailure(`Failed to fetch todo by ID ${itemId}`, error);
         });
     }
 
-    removeTodoItem = async (itemId: string): Promise<OperationResult<void>> => {
+    removeTodoItemById = async (itemId: string): Promise<OperationResult<void>> => {
         console.log('Removing todo item with ID:', itemId);
         return await this._prisma.todo_items.delete({
             where: { id: itemId },
         }).then(() => {
             return new OperationSuccess(`Todo item with ID ${itemId} deleted successfully`, undefined);
         }).catch((error) => {
-            return new OperationFailure(`Failed to delete todo item with ID ${itemId}`, error);
+            return new OperationFailure(`Failed to delete todo item by ID ${itemId}`, error);
         });
     }
 

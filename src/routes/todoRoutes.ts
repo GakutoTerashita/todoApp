@@ -9,7 +9,7 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
     const {
         fetchTodoItemsDoneNot,
         fetchTodoItemsDone,
-        removeTodoItem,
+        removeTodoItemById: removeTodoItem,
         completeTodoItem,
         registerTodoItem,
         fetchTodoItemById,

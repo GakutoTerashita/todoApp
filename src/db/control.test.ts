@@ -164,4 +164,85 @@ describe('class TodoControl', () => {
         });
 
     });
+
+    describe('fetchTodoItemsDone', () => {
+        it('failure case', async () => {
+            const fetchedBy: Express.User = {
+                id: 'Test User',
+                hashed_password: 'hashed',
+                created_at: new Date().toISOString(),
+                is_admin: false
+            };
+            const error = new Error('Database error');
+            prismaMock.todo_items.findMany.mockRejectedValue(error);
+            const result = await todoControl.fetchTodoItemsDone(fetchedBy);
+            expect(result).toBeInstanceOf(OperationFailure);
+            assertFailure(result);
+            expect(result.message).toBe('Failed to fetch done todo items for user: Test User');
+            expect(result.error).toBe(error);
+        });
+
+        describe('success case', () => {
+
+            it('single item', async () => {
+                const fetchedBy: Express.User = {
+                    id: 'Test User',
+                    hashed_password: 'hashed',
+                    created_at: new Date().toISOString(),
+                    is_admin: false
+                };
+                const findManyReturns: TodoListItem[] = [{
+                    id: '1',
+                    name: 'Test Item',
+                    done: true,
+                    due_date: new Date(),
+                    created_by: 'hoge',
+                }];
+                prismaMock.todo_items.findMany.mockResolvedValue(findManyReturns);
+
+                const result = await todoControl.fetchTodoItemsDone(fetchedBy);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe('Fetched done todo items for user: Test User');
+                expect(result.data).toEqual(findManyReturns);
+            });
+            it('multiple items', async () => {
+                const fetchedBy: Express.User = {
+                    id: 'Test User',
+                    hashed_password: 'hashed',
+                    created_at: new Date().toISOString(),
+                    is_admin: false
+                };
+                const findManyReturns: TodoListItem[] = [
+                    { id: '1', name: 'Test Item 1', done: true, due_date: new Date(), created_by: 'hoge' },
+                    { id: '2', name: 'Test Item 2', done: true, due_date: new Date(), created_by: 'hoge' }
+                ];
+                prismaMock.todo_items.findMany.mockResolvedValue(findManyReturns);
+
+                const result = await todoControl.fetchTodoItemsDone(fetchedBy);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe('Fetched done todo items for user: Test User');
+                expect(result.data).toEqual(findManyReturns);
+            });
+            it('no items', async () => {
+                const fetchedBy: Express.User = {
+                    id: 'Test User',
+                    hashed_password: 'hashed',
+                    created_at: new Date().toISOString(),
+                    is_admin: false
+                };
+                prismaMock.todo_items.findMany.mockResolvedValue([]);
+
+                const result = await todoControl.fetchTodoItemsDone(fetchedBy);
+
+                expect(result).toBeInstanceOf(OperationSuccess);
+                assertSuccess(result);
+                expect(result.message).toBe('No done todo items found for user: Test User');
+                expect(result.data).toEqual([]);
+            });
+        });
+    });
 });
