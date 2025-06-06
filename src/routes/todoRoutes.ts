@@ -63,14 +63,16 @@ export const todoRoutes = (prisma: PrismaClient): Router => {
         }
 
         try {
-            await completeTodoItem(prisma, itemId)
+            await completeTodoItem(prisma, itemId);
+            console.log('Item status changed successfully for item ID:', itemId);
             req.flash('success', 'Changed item status successfully');
             res.redirect('/');
         } catch (error) {
-            req.flash('error', 'Failed to change item status');
             console.error('Error changing item status:', error);
+            req.flash('error', 'Failed to change item status');
             res.redirect('/');
         }
+
     });
 
     router.post('/items/register', is_login, async (req, res) => {
