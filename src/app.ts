@@ -8,7 +8,7 @@ import { authRoutes } from './routes/authRoutes';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma-client'; // Adjust the import path as necessary
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -18,7 +18,6 @@ const app = express();
 
 async function main() {
     const PORT = process.env.PORT || 3000;
-    const prisma = new PrismaClient();
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -52,8 +51,8 @@ async function main() {
     app.get('/', (req, res) => {
         res.redirect('/todo');
     });
-    app.use('/todo', todoRoutes(prisma));
-    app.use('/auth', authRoutes(prisma));
+    app.use('/todo', todoRoutes());
+    app.use('/auth', authRoutes());
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
