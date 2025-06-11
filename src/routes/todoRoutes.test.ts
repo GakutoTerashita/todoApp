@@ -62,5 +62,52 @@ describe('todoRouteHandlers', () => {
                 expect(res.redirect).toHaveBeenCalledWith('/error');
             });
         })
+
+        describe('success cases', () => {
+            let consoleErrorSpy: jest.SpyInstance;
+            let consoleLogSpy: jest.SpyInstance;
+            beforeEach(() => {
+                consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+                consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+            })
+
+            afterEach(() => {
+                jest.restoreAllMocks();
+                consoleErrorSpy.mockRestore();
+                consoleLogSpy.mockRestore();
+            })
+
+            it('should render home with todo items', async () => {
+                const req = {
+                    user: { id: 'user1' },
+                    flash: jest.fn(),
+                } as any;
+                const res = {
+                    redirect: jest.fn(),
+                    render: jest.fn(),
+                } as any;
+
+                const mockItemsDone = [{ id: '1', title: 'Test Item 1' }];
+                const mockItemsNotDone = [{ id: '2', title: 'Test Item 2' }];
+
+                jest.spyOn(
+                    require('../services/todo-items.service'),
+                    'findTodoItemsDone'
+                ).mockResolvedValue(mockItemsDone);
+                jest.spyOn(
+                    require('../services/todo-items.service'),
+                    'findTodoItemsNotDone'
+                ).mockResolvedValue(mockItemsNotDone);
+
+                await handler_get_root(req, res);
+
+                expect(res.render).toHaveBeenCalledWith('home', {
+                    items: mockItemsDone,
+                    itemsDone: mockItemsNotDone,
+                    success: req.flash('success'),
+                    error: req.flash('error'),
+                });
+            });
+        });
     });
 });
