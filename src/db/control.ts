@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../prisma-client';
 import { TodoListItem, TodoListItemWithUser } from './todoListItem';
 
 /**
@@ -55,15 +55,9 @@ export class OperationFailure extends OperationResultBase {
 type OperationResult<T = void> = OperationSuccess<T> | OperationFailure;
 
 export class TodoControl {
-    private _prisma: PrismaClient;
-
-    constructor(prisma: PrismaClient) {
-        this._prisma = prisma;
-    }
-
     fetchTodoItemsDoneNot = async (fetchedBy: Express.User): Promise<OperationResult<TodoListItem[]>> => {
         console.log('Fetching todo items not done for user:', fetchedBy);
-        return await this._prisma.todo_items.findMany({
+        return await prisma.todo_items.findMany({
             select: {
                 id: true,
                 name: true,
@@ -94,7 +88,7 @@ export class TodoControl {
 
     fetchTodoItemsDone = async (fetchedBy: Express.User): Promise<OperationResult<TodoListItemWithUser[]>> => {
         console.log('Fetching done todo items for user:', fetchedBy);
-        return await this._prisma.todo_items.findMany({
+        return await prisma.todo_items.findMany({
             select: {
                 id: true,
                 name: true,
@@ -125,7 +119,7 @@ export class TodoControl {
 
     fetchTodoItemById = async (itemId: string): Promise<OperationResult<TodoListItem | null>> => {
         console.log('Fetching todo item by ID:', itemId);
-        return await this._prisma.todo_items.findUnique({
+        return await prisma.todo_items.findUnique({
             where: { id: itemId },
             select: {
                 id: true,
@@ -146,7 +140,7 @@ export class TodoControl {
 
     removeTodoItemById = async (itemId: string): Promise<OperationResult<void>> => {
         console.log('Removing todo item with ID:', itemId);
-        return await this._prisma.todo_items.delete({
+        return await prisma.todo_items.delete({
             where: { id: itemId },
         }).then(() => {
             return new OperationSuccess(`Todo item with ID ${itemId} deleted successfully`, undefined);
@@ -157,7 +151,7 @@ export class TodoControl {
 
     completeTodoItem = async (itemId: string): Promise<OperationResult<void>> => {
         console.log('Completing todo item with ID:', itemId);
-        const itemToComplete = await this._prisma.todo_items.findUnique({
+        const itemToComplete = await prisma.todo_items.findUnique({
             where: { id: itemId },
             select: {
                 id: true,
@@ -171,7 +165,7 @@ export class TodoControl {
             return new OperationFailure(`Todo item with ID ${itemId} not found`, undefined);
         }
 
-        return await this._prisma.todo_items.update({
+        return await prisma.todo_items.update({
             where: { id: itemId },
             data: { done: itemToComplete.done ? false : true },
         }).then((item) => {
@@ -183,7 +177,7 @@ export class TodoControl {
 
     registerTodoItem = async (item: TodoListItem): Promise<OperationResult<void>> => {
         console.log('Registering new todo item:', item);
-        return await this._prisma.todo_items.create({
+        return await prisma.todo_items.create({
             data: {
                 id: item.id,
                 name: item.name,
@@ -200,7 +194,7 @@ export class TodoControl {
 
     updateTodoItemNameById = async (itemId: string, name: string): Promise<OperationResult<void>> => {
         console.log('Updating todo item name for ID:', itemId, 'to:', name);
-        return await this._prisma.todo_items.update({
+        return await prisma.todo_items.update({
             where: { id: itemId },
             data: { name },
         }).then(() => {
