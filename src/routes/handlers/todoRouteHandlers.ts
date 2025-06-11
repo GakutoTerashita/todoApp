@@ -1,6 +1,14 @@
 import { Request, Response } from "express";
 import { TodoListItem } from "../../db/todoListItem";
-import { findTodoItemsDone, findTodoItemsNotDone, removeTodoItem, completeTodoItem, registerTodoItem, findTodoItemById, updateTodoItemNameById } from "../../services/todo-items.service";
+import {
+    findTodoItemsDone,
+    findTodoItemsNotDone,
+    removeTodoItem,
+    completeTodoItem,
+    registerTodoItem,
+    findTodoItemById,
+    updateTodoItemNameById
+} from "../../services/todo-items.service";
 import { v4 as uuidV4 } from "uuid";
 
 export const handler_get_root = async (
