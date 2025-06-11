@@ -1,10 +1,13 @@
-import { prismaMock } from '../../singleton';
 import { handler_get_root } from './handlers/todoRouteHandlers';
 
 describe('todoRouteHandlers', () => {
     describe('handler_get_root', () => {
         describe('failure cases', () => {
-            it('should redirect to /error when fetching todo items fails', async () => {
+            afterEach(() => {
+                jest.restoreAllMocks();
+            })
+
+            it('should redirect to /error when finding done todo_items fails', async () => {
                 const req = {
                     user: { id: 'user1' },
                     flash: jest.fn(),
@@ -14,14 +17,17 @@ describe('todoRouteHandlers', () => {
                     render: jest.fn(),
                 } as any;
 
-                prismaMock.todo_items.findMany.mockRejectedValue(new Error('Database error'));
+                jest.spyOn(
+                    require('../services/todo-items.service'),
+                    'findTodoItemsDone'
+                ).mockRejectedValue(new Error('Database error'));
 
                 await handler_get_root(req, res);
 
                 expect(res.redirect).toHaveBeenCalledWith('/error');
             });
 
-            it('should redirect to /error when fetching done todo items fails', async () => {
+            it('should redirect to /error when fetching not done todo_items fails', async () => {
                 const req = {
                     user: { id: 'user1' },
                     flash: jest.fn(),
@@ -31,8 +37,16 @@ describe('todoRouteHandlers', () => {
                     render: jest.fn(),
                 } as any;
 
-                prismaMock.todo_items.findMany.mockResolvedValue([]);
-                prismaMock.todo_items.findMany.mockRejectedValue(new Error('Database error'));
+                jest.spyOn(
+                    require('../services/todo-items.service'),
+                    'findTodoItemsDone'
+                )
+                    .mockResolvedValue([])
+                jest.spyOn(
+                    require('../services/todo-items.service'),
+                    'findTodoItemsNotDone'
+                )
+                    .mockRejectedValue(new Error('Database error'));
 
                 await handler_get_root(req, res);
 

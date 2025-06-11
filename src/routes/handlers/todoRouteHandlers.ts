@@ -26,7 +26,7 @@ export const handler_get_root = async (
             error: req.flash('error'),
         });
     } catch (error) {
-        console.error('Error fetching todo items');
+        console.error('Error fetching todo items', error);
         res.redirect('/error'); // TODO: Create an database fetch error page
     }
 };
