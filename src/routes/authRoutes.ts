@@ -2,12 +2,11 @@ import express, { Router } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { PrismaClient } from "@prisma/client";
-import { AuthenticateUtil } from "../auth/utils";
+import { authUtils } from "../auth/utils";
 
 export const authRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
 
-    const authUtils = new AuthenticateUtil(prisma);
     const strategy = new LocalStrategy(authUtils.authenticateUser);
 
     passport.use(strategy);

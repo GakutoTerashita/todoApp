@@ -1,6 +1,7 @@
 import { IVerifyOptions, VerifyFunction } from "passport-local";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma-client";
 
 declare global {
     namespace Express {
@@ -13,7 +14,7 @@ declare global {
     }
 }
 
-export class AuthenticateUtil {
+class AuthenticateUtil {
     private _prisma: PrismaClient;
 
     constructor(prisma: PrismaClient) {
@@ -138,3 +139,5 @@ export class AuthenticateUtil {
         };
     }
 }
+
+export const authUtils = new AuthenticateUtil(prisma);
