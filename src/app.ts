@@ -9,6 +9,7 @@ import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { prisma } from './prisma-client'; // Adjust the import path as necessary
 import { todoRoutes } from './routes/todo/todoRoutes';
 import { authRoutes } from './routes/auth/authRoutes';
+import errorHandler from './middlewares/errorHandler';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
@@ -53,6 +54,8 @@ async function main() {
     });
     app.use('/todo', todoRoutes());
     app.use('/auth', authRoutes());
+
+    app.use(errorHandler);
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
