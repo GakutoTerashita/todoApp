@@ -3,6 +3,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { PrismaClient } from "@prisma/client";
 import { authUtils } from "../auth/utils";
+import { logoutHandler, registerHandler } from "./handlers/authRouteHandlers";
 
 export const authRoutes = (prisma: PrismaClient): Router => {
     const router = express.Router();
@@ -28,45 +29,8 @@ export const authRoutes = (prisma: PrismaClient): Router => {
             next();
         }
     );
-
-    router.post("/logout", (req, res) => {
-        req.logout((err) => {
-            if (err) {
-                console.error('Error during logout:', err);
-                return res.redirect('/auth');
-            }
-            req.flash('success', 'You have been logged out successfully.');
-            res.redirect('/auth');
-        });
-    });
-
-    router.post("/register", async (req, res) => {
-        const {
-            username,
-            password,
-            is_admin_raw,
-        }: {
-            username: string;
-            password: string;
-            is_admin_raw: string;
-        } = req.body;
-        const is_admin = is_admin_raw === 'true';
-
-        // Try to create a new user
-        const userMaybe = await authUtils.createUser(username, password, is_admin).catch((err) => {
-            console.error('Error creating user:', err);
-        });
-
-        if (!userMaybe) {
-            req.flash('error', 'An error occurred while creating the user. Please try again.');
-            return res.redirect('/auth');
-        }
-
-        // If user creation was successful, redirect to the auth page with a success message
-        req.flash('success', 'Registration successful. You can now log in.');
-        return res.redirect('/auth');
-    });
-
+    router.post("/logout", logoutHandler);
+    router.post("/register", registerHandler);
     router.get("/", async (req, res) => {
         res.render('auth.ejs', {
             success: req.flash('success'),
