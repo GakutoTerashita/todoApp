@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { handler_get_root, handler_get_error, handler_post_delete_itemid, handler_post_complete_itemid, handler_post_register_itemid, handler_get_modify_itemid, handler_post_modify_itemid } from './handlers/todoRouteHandlers';
+import { get_todo_root, get_error, post_delete_itemid, post_complete_itemid, post_register_itemid, get_modify_itemid, post_modify_itemid } from './handlers/todoRouteHandlers';
 
 export const todoRoutes = (): Router => {
     const router = express.Router();
@@ -11,13 +11,13 @@ export const todoRoutes = (): Router => {
         return next();
     };
 
-    router.get('/', is_login, handler_get_root);
-    router.get('/error', handler_get_error);
-    router.post('/items/delete/:itemId', is_login, handler_post_delete_itemid);
-    router.post('/items/complete/:itemId', is_login, handler_post_complete_itemid);
-    router.post('/items/register', is_login, handler_post_register_itemid);
-    router.get('/items/modify/:itemId', is_login, handler_get_modify_itemid);
-    router.post('/items/modify/:itemId', is_login, handler_post_modify_itemid);
+    router.get('/', is_login, get_todo_root);
+    router.get('/error', get_error);
+    router.post('/items/delete/:itemId', is_login, post_delete_itemid);
+    router.post('/items/complete/:itemId', is_login, post_complete_itemid);
+    router.post('/items/register', is_login, post_register_itemid);
+    router.get('/items/modify/:itemId', is_login, get_modify_itemid);
+    router.post('/items/modify/:itemId', is_login, post_modify_itemid);
 
     return router;
 }

@@ -11,7 +11,7 @@ import {
 } from "../../services/todo-items.service";
 import { v4 as uuidV4 } from "uuid";
 
-export const handler_get_root = async (
+export const get_todo_root = async (
     req: Request,
     res: Response
 ) => {
@@ -31,11 +31,11 @@ export const handler_get_root = async (
     }
 };
 
-export const handler_get_error = (req: Request, res: Response) => {
+export const get_error = (req: Request, res: Response) => {
     res.send('error'); // TODO: Create an error page
 };
 
-export const handler_post_delete_itemid = async (req: Request, res: Response) => {
+export const post_delete_itemid = async (req: Request, res: Response) => {
     const itemId = req.params.itemId;
     if (!itemId) {
         req.flash('error', 'Item ID is required');
@@ -54,7 +54,7 @@ export const handler_post_delete_itemid = async (req: Request, res: Response) =>
     }
 }
 
-export const handler_post_complete_itemid = async (req: Request, res: Response) => {
+export const post_complete_itemid = async (req: Request, res: Response) => {
     const itemId = req.params.itemId;
     if (!itemId) {
         req.flash('error', 'Item ID is required');
@@ -74,7 +74,7 @@ export const handler_post_complete_itemid = async (req: Request, res: Response) 
     }
 }
 
-export const handler_post_register_itemid = async (req: Request, res: Response) => {
+export const post_register_itemid = async (req: Request, res: Response) => {
     const { name, dueDate } = req.body;
     if (!name) {
         req.flash('error', 'Item name is required');
@@ -101,7 +101,7 @@ export const handler_post_register_itemid = async (req: Request, res: Response) 
     }
 }
 
-export const handler_get_modify_itemid = async (req: Request, res: Response) => {
+export const get_modify_itemid = async (req: Request, res: Response) => {
     const itemId = req.params.itemId;
     if (!itemId) {
         req.flash('error', 'Item ID is required');
@@ -123,7 +123,7 @@ export const handler_get_modify_itemid = async (req: Request, res: Response) => 
     }
 };
 
-export const handler_post_modify_itemid = async (req: Request, res: Response) => {
+export const post_modify_itemid = async (req: Request, res: Response) => {
     const itemId = req.params.itemId;
     const { name } = req.body;
 

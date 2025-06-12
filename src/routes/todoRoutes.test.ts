@@ -1,4 +1,4 @@
-import { handler_get_root } from './handlers/todoRouteHandlers';
+import { get_todo_root } from './handlers/todoRouteHandlers';
 
 describe('todoRouteHandlers', () => {
     describe('handler_get_root', () => {
@@ -31,7 +31,7 @@ describe('todoRouteHandlers', () => {
                     'findTodoItemsDone'
                 ).mockRejectedValue(new Error('Database error 0'));
 
-                await handler_get_root(req, res);
+                await get_todo_root(req, res);
 
                 expect(res.redirect).toHaveBeenCalledWith('/error');
             });
@@ -57,7 +57,7 @@ describe('todoRouteHandlers', () => {
                 )
                     .mockRejectedValue(new Error('Database error 1'));
 
-                await handler_get_root(req, res);
+                await get_todo_root(req, res);
 
                 expect(res.redirect).toHaveBeenCalledWith('/error');
             });
@@ -99,7 +99,7 @@ describe('todoRouteHandlers', () => {
                     'findTodoItemsNotDone'
                 ).mockResolvedValue(mockItemsNotDone);
 
-                await handler_get_root(req, res);
+                await get_todo_root(req, res);
 
                 expect(res.render).toHaveBeenCalledWith('home', {
                     items: mockItemsDone,
