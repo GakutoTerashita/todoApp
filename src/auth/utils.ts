@@ -2,6 +2,7 @@ import { IVerifyOptions, VerifyFunction } from "passport-local";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "../prisma-client";
+import { fetchUserByUsername } from "../db/control";
 
 declare global {
     namespace Express {
@@ -28,36 +29,32 @@ class AuthenticateUtil {
     ): Promise<void> => {
         console.log('Authenticating attempt for user:', username);
 
-        // Find user by username
-        const user = await this._prisma.users.findUnique({
-            where: { id: username },
-        }).catch((err) => {
-            console.error('Error finding user:', err);
-            cb(err);
-        });
+        let user: Express.User | null = null;
 
-        // If user not found, return early
-        if (!user) {
-            console.warn('No user found with the provided username:', username);
-            cb(null, false, { message: 'Incorrect username.' });
-            return;
+        try {
+            user = await fetchUserByUsername(username);
+        } catch (error) {
+            console.error('Error fetching user by username:', error);
+            return cb(error);
         }
 
-        // Use promisified bcrypt.compare instead of callback
+        if (!user) {
+            console.warn('No user found with the provided username:', username);
+            return cb(null, false, { message: 'Incorrect username.' });
+        }
+
         const isMatch = await this._comparePasswordAsync(password, user.hashed_password);
 
         if (!isMatch) {
             console.warn('Incorrect password for user:', username);
-            cb(null, false, { message: 'Incorrect password.' });
-            return;
+            return cb(null, false, { message: 'Incorrect password.' });
         }
 
-        // Authentication successful
         console.log('User authenticated successfully:', username);
         cb(null, {
             id: user.id,
             hashed_password: user.hashed_password,
-            created_at: user.created_at ? user.created_at.toISOString() : '',
+            created_at: user.created_at || '',
             is_admin: user.is_admin || false,
         });
     };

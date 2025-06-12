@@ -121,3 +121,18 @@ export const updateDbTodoItemNameById = async (itemId: string, name: string): Pr
         throw new Error(`Failed to update todo item name for ID ${itemId} :${error}`);
     });
 }
+
+export const fetchUserByUsername = async (username: string): Promise<Express.User | null> => {
+    const userFetched = await prisma.users.findUnique({
+        where: { id: username },
+    }).catch((error) => {
+        throw new Error(`Failed to fetch user by username ${username}: ${error}`);
+    });
+
+    return {
+        id: userFetched?.id || '',
+        hashed_password: userFetched?.hashed_password || '',
+        created_at: userFetched?.created_at ? userFetched.created_at.toISOString() : '',
+        is_admin: userFetched?.is_admin || false,
+    }
+};
