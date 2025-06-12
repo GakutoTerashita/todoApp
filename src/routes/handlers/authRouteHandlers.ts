@@ -16,22 +16,21 @@ export const logoutHandler = (
 }
 
 export const registerHandler = async (
-    req: Request,
-    res: Response,
-) => {
-    const {
-        username,
-        password,
-        is_admin_raw,
-    }: {
+    req: Request<{
         username: string;
         password: string;
         is_admin_raw: string;
-    } = req.body;
-    const is_admin = is_admin_raw === 'true';
+    }>,
+    res: Response,
+) => {
+    const is_admin = req.body.is_admin_raw === 'true';
 
     try {
-        await authUtils.createUser(username, password, is_admin);
+        await authUtils.createUser(
+            req.body.username,
+            req.body.password,
+            is_admin
+        );
     } catch (err) {
         console.error('Error creating user:', err);
         req.flash('error', 'An error occurred while creating the user. Please try again.');
