@@ -1,6 +1,6 @@
-import { get_todo_root, post_complete_itemid, post_delete_itemid } from './todoRouteHandlers';
-import * as todoItemService from '../../services/todo-items.service';
-import { TodoListItem } from '../../db/todoListItem';
+import { get_todo_root, post_complete_itemid, post_delete_itemid } from '../../../routes/handlers/todoRouteHandlers';
+import * as todoItemService from '../../../services/todo-items.service';
+import { TodoListItem } from '../../../db/todoListItem';
 
 describe('todoRouteHandlers', () => {
     describe('get_todo_root', () => {

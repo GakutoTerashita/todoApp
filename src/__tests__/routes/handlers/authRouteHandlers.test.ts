@@ -1,4 +1,5 @@
-import { authUtils } from '../../auth/utils';
+import { authUtils } from "../../../auth/utils";
+import { logoutHandler, registerHandler } from "../../../routes/handlers/authRouteHandlers";
 
 describe('Auth Route Handlers', () => {
     describe('logoutHandler', () => {
@@ -23,7 +24,6 @@ describe('Auth Route Handlers', () => {
         })
 
         it('should call req.logout and redirect on success', () => {
-            const { logoutHandler } = require('./authRouteHandlers');
             logoutHandler(req, res);
             expect(req.logout).toHaveBeenCalled();
             expect(req.flash).toHaveBeenCalledWith('success', 'You have been logged out successfully.');
@@ -36,7 +36,6 @@ describe('Auth Route Handlers', () => {
             ) => {
                 return cb(new Error('Logout error'))
             });
-            const { logoutHandler } = require('./authRouteHandlers');
             logoutHandler(req, res);
             expect(req.logout).toHaveBeenCalled();
             expect(req.flash).not.toHaveBeenCalled();
@@ -70,7 +69,6 @@ describe('Auth Route Handlers', () => {
         })
 
         it('on create a user success, redirect with success message', async () => {
-            const { registerHandler } = require('./authRouteHandlers');
             jest.spyOn(authUtils, 'createUser').mockResolvedValueOnce({
                 id: 'testuser',
                 hashed_password: 'hashedpassword',
@@ -86,7 +84,6 @@ describe('Auth Route Handlers', () => {
         });
 
         it('should handle errors during user creation', async () => {
-            const { registerHandler } = require('./authRouteHandlers');
             jest.spyOn(authUtils, 'createUser').mockRejectedValueOnce(new Error('User creation error'));
             await registerHandler(req, res);
             expect(req.flash).toHaveBeenCalledWith(
