@@ -1,7 +1,9 @@
-import { get_todo_root } from './handlers/todoRouteHandlers';
+import { get_todo_root } from './todoRouteHandlers';
+import * as todoItemService from '../../services/todo-items.service';
+import { TodoListItem } from '../../db/todoListItem';
 
 describe('todoRouteHandlers', () => {
-    describe('handler_get_root', () => {
+    describe('get_todo_root', () => {
         describe('failure cases', () => {
             let consoleErrorSpy: jest.SpyInstance;
             let consoleLogSpy: jest.SpyInstance;
@@ -27,7 +29,7 @@ describe('todoRouteHandlers', () => {
                 } as any;
 
                 jest.spyOn(
-                    require('../services/todo-items.service'),
+                    todoItemService,
                     'findTodoItemsDone'
                 ).mockRejectedValue(new Error('Database error 0'));
 
@@ -47,12 +49,12 @@ describe('todoRouteHandlers', () => {
                 } as any;
 
                 jest.spyOn(
-                    require('../services/todo-items.service'),
+                    todoItemService,
                     'findTodoItemsDone'
                 )
                     .mockResolvedValue([])
                 jest.spyOn(
-                    require('../services/todo-items.service'),
+                    todoItemService,
                     'findTodoItemsNotDone'
                 )
                     .mockRejectedValue(new Error('Database error 1'));
@@ -87,15 +89,27 @@ describe('todoRouteHandlers', () => {
                     render: jest.fn(),
                 } as any;
 
-                const mockItemsDone = [{ id: '1', title: 'Test Item 1' }];
-                const mockItemsNotDone = [{ id: '2', title: 'Test Item 2' }];
+                const mockItemsDone: TodoListItem[] = [{
+                    id: '1',
+                    name: 'Test Item 1',
+                    done: true,
+                    created_by: 'user1',
+                    due_date: new Date(),
+                }];
+                const mockItemsNotDone: TodoListItem[] = [{
+                    id: '2',
+                    name: 'Test Item 2',
+                    done: false,
+                    created_by: 'user2',
+                    due_date: new Date(),
+                }];
 
                 jest.spyOn(
-                    require('../services/todo-items.service'),
+                    todoItemService,
                     'findTodoItemsDone'
                 ).mockResolvedValue(mockItemsDone);
                 jest.spyOn(
-                    require('../services/todo-items.service'),
+                    todoItemService,
                     'findTodoItemsNotDone'
                 ).mockResolvedValue(mockItemsNotDone);
 
