@@ -31,20 +31,13 @@ class AuthenticateUtil {
 
         let user: Express.User | null = null;
 
-        try {
-            user = await fetchUserByUsername(username);
-        } catch (error) {
-            console.error('Error fetching user by username:', error);
-            return cb(error);
-        }
-
+        user = await fetchUserByUsername(username);
         if (!user) {
             console.warn('No user found with the provided username:', username);
             return cb(null, false, { message: 'Incorrect username.' });
         }
 
         const isMatch = await this._comparePasswordAsync(password, user.hashed_password);
-
         if (!isMatch) {
             console.warn('Incorrect password for user:', username);
             return cb(null, false, { message: 'Incorrect password.' });
