@@ -102,8 +102,8 @@ describe('todoRouteHandlers', () => {
                 await get_todo_root(req, res);
 
                 expect(res.render).toHaveBeenCalledWith('home', {
-                    items: mockItemsDone,
-                    itemsDone: mockItemsNotDone,
+                    items: mockItemsNotDone,
+                    itemsDone: mockItemsDone,
                     success: req.flash('success'),
                     error: req.flash('error'),
                 });

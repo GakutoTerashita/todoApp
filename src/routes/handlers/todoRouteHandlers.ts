@@ -16,11 +16,11 @@ export const get_todo_root = async (
     res: Response
 ) => {
     try {
+        const itemsNotDone = await findTodoItemsNotDone(req.user!);
         const itemsDone = await findTodoItemsDone(req.user!);
-        const items = await findTodoItemsNotDone(req.user!);
 
         res.render('home', {
-            items: items,
+            items: itemsNotDone,
             itemsDone: itemsDone,
             success: req.flash('success'),
             error: req.flash('error'),
