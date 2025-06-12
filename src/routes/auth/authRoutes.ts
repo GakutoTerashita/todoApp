@@ -1,8 +1,8 @@
 import express, { Router } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { authUtils } from "../auth/utils";
-import { logoutHandler, registerHandler } from "./handlers/authRouteHandlers";
+import { authUtils } from "../../auth/utils";
+import { logoutHandler, registerHandler } from "./authRouteHandlers";
 
 export const authRoutes = (): Router => {
     const router = express.Router();

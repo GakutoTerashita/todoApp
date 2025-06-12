@@ -2,13 +2,13 @@ import express from 'express';
 import path from 'path';
 import flash from 'connect-flash';
 import dotenv from 'dotenv';
-import { todoRoutes } from './routes/todoRoutes';
 import expressSession from 'express-session';
-import { authRoutes } from './routes/authRoutes';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { prisma } from './prisma-client'; // Adjust the import path as necessary
+import { todoRoutes } from './routes/todo/todoRoutes';
+import { authRoutes } from './routes/auth/authRoutes';
 
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();

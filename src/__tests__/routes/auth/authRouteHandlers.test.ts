@@ -1,5 +1,5 @@
 import { authUtils } from "../../../auth/utils";
-import { logoutHandler, registerHandler } from "../../../routes/handlers/authRouteHandlers";
+import { logoutHandler, registerHandler } from "../../../routes/auth/authRouteHandlers";
 
 describe('Auth Route Handlers', () => {
     describe('logoutHandler', () => {

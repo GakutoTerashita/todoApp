@@ -1,5 +1,13 @@
 import express, { Router } from 'express';
-import { get_todo_root, get_error, post_delete_itemid, post_complete_itemid, post_register_itemid, get_modify_itemid, post_modify_itemid } from './handlers/todoRouteHandlers';
+import {
+    get_todo_root,
+    get_error,
+    post_delete_itemid,
+    post_complete_itemid,
+    post_register_itemid,
+    get_modify_itemid,
+    post_modify_itemid
+} from './todoRouteHandlers';
 
 export const todoRoutes = (): Router => {
     const router = express.Router();
