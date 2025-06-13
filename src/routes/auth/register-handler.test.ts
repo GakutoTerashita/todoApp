@@ -1,5 +1,5 @@
-import { authUtils } from "../../../../auth/utils";
-import { registerHandler } from "../../../../routes/auth/authRouteHandlers";
+import { authUtils } from "../../auth/utils";
+import { registerHandler } from "./authRouteHandlers";
 
 describe('registerHandler', () => {
     let req: any;

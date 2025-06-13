@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import errorHandler from '../../middlewares/errorHandler';
+import errorHandler from './errorHandler';
 
 describe('errorHandler middleware catches errors', () => {
     let req: Request;

@@ -1,5 +1,5 @@
-import { post_delete_itemid } from '../../../../routes/todo/todoRouteHandlers';
-import * as todoItemService from '../../../../services/todo-items.service';
+import { post_delete_itemid } from './todoRouteHandlers';
+import * as todoItemService from '../../services/todo-items.service';
 
 describe('post_delete_itemid', () => {
     describe('failure cases', () => {

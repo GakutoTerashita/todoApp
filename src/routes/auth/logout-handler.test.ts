@@ -1,4 +1,4 @@
-import { logoutHandler } from "../../../../routes/auth/authRouteHandlers";
+import { logoutHandler } from "./authRouteHandlers";
 
 describe('logoutHandler', () => {
     let req: any;

@@ -1,6 +1,6 @@
-import { TodoListItem } from '../../../../db/todoListItem';
-import { get_todo_root } from '../../../../routes/todo/todoRouteHandlers';
-import * as todoItemService from '../../../../services/todo-items.service';
+import { TodoListItem } from '../../db/todoListItem';
+import { get_todo_root } from './todoRouteHandlers';
+import * as todoItemService from '../../services/todo-items.service';
 
 describe('get_todo_root', () => {
     describe('failure cases', () => {
